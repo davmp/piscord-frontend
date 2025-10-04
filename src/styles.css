@@ -1,0 +1,23 @@
+@import "tailwindcss";
+@import "primeicons/primeicons.css";
+@plugin "tailwindcss-primeui";
+@custom-variant dark (&:where(.app-dark, .app-dark *));
+
+@font-face {
+  /* font-family: "Poppins", sans-serif; */
+  font-family: "Montserrat", sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  src: url("assets/fonts/Montserrat-Regular.ttf") format("truetype");
+}
+body {
+  font-family: "Montserrat", sans-serif;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}

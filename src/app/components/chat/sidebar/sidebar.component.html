@@ -1,0 +1,61 @@
+<div class="w-full flex flex-col h-screen bg-neutral-900 text-white">
+  <div class="space-y-2 overflow-y-scroll h-full hide-scrollbar pb-2">
+    <header class="mb-0 h-14 flex items-center px-2">
+      <p-button
+        label="Procure uma conversa"
+        icon="pi pi-search"
+        [dt]="ghost"
+        fluid
+        class="w-full"
+        styleClass="text-sm! py-2! w-full! bg-neutral-800! border! border-neutral-700/20! hover:bg-neutral-700/50! transition-colors! text-nowrap! truncate!"
+      >
+      </p-button>
+    </header>
+    <hr class="border-t border-neutral-700/80" />
+    <ul class="flex flex-col gap-y-0.5 px-2">
+      <p-button
+        label="Amigos"
+        [dt]="ghost"
+        fluid
+        icon="pi pi-users"
+        styleClass="justify-start! transition-none!"
+      >
+      </p-button>
+      <p-button
+        label="Notificações"
+        [dt]="ghost"
+        fluid
+        icon="pi pi-bell"
+        badge="3"
+        badgeSeverity="danger"
+        styleClass="justify-start! transition-none! active:bg-neutral-00!"
+      >
+      </p-button>
+    </ul>
+    <hr class="border-t border-neutral-700/80" />
+    <ul class="flex flex-col gap-y-0.5 px-2">
+      @for(room of rooms(); track room.id) {
+      <p-button
+        [label]="room.name"
+        fluid
+        styleClass="justify-start! transition-none! active:bg-neutral-00! {{
+          room.id === roomService.selectedRoom?.id &&
+            'bg-neutral-800! text-white!'
+        }}"
+        routerLink="/chat/{{ room.id }}"
+        (click)="roomService.selectRoom(room)"
+        [dt]="ghost"
+      >
+        <p-avatar
+          image="{{
+            room.pictureUrl ??
+              'https://dbl-discord.usercontent.prism.gg/embed/avatars/1.png'
+          }}"
+          shape="circle"
+        />
+      </p-button>
+      }
+    </ul>
+  </div>
+  <app-user-info></app-user-info>
+</div>
