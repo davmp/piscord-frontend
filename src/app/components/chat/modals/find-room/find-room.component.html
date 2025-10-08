@@ -23,6 +23,7 @@
       fluid
       placeholder="Buscar salas ou conversas"
       [(ngModel)]="search"
+      (ngModelChange)="setSearch($event)"
       [dt]="inputThemes.outlined"
       class="h-14! text-lg!"
     />

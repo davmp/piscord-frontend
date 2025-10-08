@@ -55,7 +55,6 @@ export class RoomService {
   }
 
   createRoom(data: CreateRoomRequest): Observable<Room> {
-    console.log("Creating room with data:", data);
     return this.http.post<Room>(this.roomsApiUrl, data).pipe(
       catchError((error) => {
         console.error("Error creating room:", error);

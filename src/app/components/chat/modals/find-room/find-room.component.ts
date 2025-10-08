@@ -10,6 +10,7 @@ import type { PublicRoom, Room } from "../../../../models/rooms.models";
 import { RoomService } from "../../../../services/room/room.service";
 import * as themes from "../../../../themes/form.themes";
 import { ChatService } from "../../../../services/chat/chat.service";
+import { debounceTime, distinctUntilChanged, Subject } from "rxjs";
 
 @Component({
   selector: "app-find-room",
@@ -41,14 +42,22 @@ export class FindRoomComponent {
   buttonThemes = themes.buttonThemes;
   inputThemes = themes.inputThemes;
 
+  private searchSubject = new Subject<string>();
+
   constructor() {
     effect(() => {
       this.visible();
       if (this.visible()) {
         this.roomChanged();
-        this.loadRooms(this.search);
+        this.searchSubject.next(this.search);
       }
     });
+
+    this.searchSubject
+      .pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe((search) => {
+        this.loadRooms(search);
+      });
   }
 
   loadRooms(search: string) {
@@ -72,5 +81,10 @@ export class FindRoomComponent {
 
   handleSetVisible(visible: boolean) {
     this.setVisible.emit(visible);
+  }
+
+  setSearch(value: string) {
+    this.search = value;
+    this.searchSubject.next(value);
   }
 }
