@@ -8,7 +8,7 @@ export const buttonThemes = {
             hoverBackground: "#4752C4",
             color: "{neutral.100}",
             hoverColor: "{neutral.100}",
-            activeBackground: "#4752C477",
+            activeBackground: "#4752C4",
             focusBorderColor: "{neutral.600}",
             focusRingColor: "{neutral.600}",
             borderColor: "transparent",

@@ -35,6 +35,7 @@ export interface DisplayMessage {
   user_id: string;
   username: string;
   picture?: string;
+  file_url?: string;
   content: string;
   created_at: string;
   is_own_message: boolean;

@@ -38,7 +38,7 @@ export class WebsocketService {
     });
   }
 
-  connect(): Observable<any> {
+  connection(): Observable<any> {
     return this.socket$.asObservable();
   }
 

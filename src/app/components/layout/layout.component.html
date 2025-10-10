@@ -1,4 +1,4 @@
-@if (isMobile()) { @if (this.roomService.selectedRoom()) {
+@if (isMobile()) { @if (!isHome()) {
 <router-outlet></router-outlet>
 } @else {
 <app-sidebar (openModal)="handleOpenModal($event)"></app-sidebar>

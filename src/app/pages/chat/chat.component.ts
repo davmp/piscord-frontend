@@ -1,6 +1,11 @@
 import { Component, computed, effect, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { ActivatedRoute } from "@angular/router";
 import { Button } from "primeng/button";
+import { InputGroup } from "primeng/inputgroup";
+import { InputGroupAddon } from "primeng/inputgroupaddon";
+import { InputText } from "primeng/inputtext";
+import { Popover } from "primeng/popover";
 import { Textarea } from "primeng/textarea";
 import { HeaderComponent } from "../../components/chat/header/header.component";
 import { MessageComponent } from "../../components/chat/message/message.component";
@@ -17,11 +22,21 @@ import * as formThemes from "../../themes/form.themes";
 
 @Component({
   selector: "app-chat",
-  imports: [HeaderComponent, MessageComponent, Textarea, FormsModule, Button],
+  imports: [
+    HeaderComponent,
+    MessageComponent,
+    Textarea,
+    InputText,
+    Button,
+    Popover,
+    InputGroup,
+    InputGroupAddon,
+    FormsModule,
+  ],
   templateUrl: "./chat.component.html",
-  styles: ``,
 })
 export class ChatComponent {
+  private route = inject(ActivatedRoute);
   private roomService = inject(RoomService);
   private chatService = inject(ChatService);
   private wsService = inject(WebsocketService);
@@ -30,9 +45,12 @@ export class ChatComponent {
 
   buttonThemes = formThemes.buttonThemes;
   inputThemes = formThemes.inputThemes;
+  popoverThemes = formThemes.menuThemes;
 
   roomId: string | null = null;
   newMessageContent = "";
+  newMessageFileUrl: string | null = null;
+  tempFileUrl: string | null = null;
 
   messages = signal<DisplayMessage[]>([]);
   loadingMessages = false;
@@ -76,6 +94,18 @@ export class ChatComponent {
   });
 
   constructor() {
+    this.route.paramMap.subscribe((params) => {
+      this.roomId = params.get("roomId");
+      if (!this.roomId) {
+        this.chatService.exitRoom();
+      } else if (
+        !this.roomService.selectedRoom() ||
+        this.roomId !== this.roomService.selectedRoom()?.id
+      ) {
+        this.chatService.selectRoomId(this.roomId);
+      }
+    });
+
     effect(() => {
       this.chatService.roomChanged();
       this.fetchMessages();
@@ -104,6 +134,7 @@ export class ChatComponent {
             username: msg.username,
             picture: msg.picture,
             content: msg.content,
+            file_url: msg.file_url,
             created_at: msg.created_at,
             is_own_message: msg.is_own_message,
           }));
@@ -116,7 +147,7 @@ export class ChatComponent {
   }
 
   subscribeToMessages(): void {
-    this.wsService.connect().subscribe({
+    this.wsService.connection().subscribe({
       next: (wsMessage: WSResponse) => {
         if (wsMessage.type === "new_message" && wsMessage.data) {
           const message = {
@@ -131,12 +162,17 @@ export class ChatComponent {
 
   sendMessage(): void {
     if (this.newMessageContent.trim() && this.roomService.selectedRoom()) {
-      const err = this.chatService.sendMessage(this.newMessageContent);
+      const err = this.chatService.sendMessage(
+        this.newMessageContent,
+        this.newMessageFileUrl
+      );
       if (err) {
         console.error("Error sending message: ", err);
         return;
       }
       this.newMessageContent = "";
+      this.newMessageFileUrl = null;
+      this.tempFileUrl = null;
     }
   }
 
@@ -145,36 +181,10 @@ export class ChatComponent {
   }
 
   dateSeparator(dateString: string) {
-    var fulldays = [
-      "Domingo",
-      "Segunda",
-      "Terça",
-      "Quarta",
-      "Quinta",
-      "Sexta",
-      "Sábado",
-    ];
-
-    var months = [
-      "Jan",
-      "Fev",
-      "Mar",
-      "Abr",
-      "Mai",
-      "Jun",
-      "Jul",
-      "Ago",
-      "Set",
-      "Out",
-      "Nov",
-      "Dez",
-    ];
-
     const date = new Date(dateString);
 
     var dt = new Date(dateString),
       dtDat = dt.getDate(),
-      month = months[dt.getMonth()],
       diffDays = new Date().getDate() - dtDat,
       diffMonths = new Date().getMonth() - dt.getMonth(),
       diffYears = new Date().getFullYear() - dt.getFullYear();
@@ -183,10 +193,6 @@ export class ChatComponent {
       return "Hoje";
     } else if (diffYears === 0 && diffDays === 1) {
       return "Ontem";
-    } else if (diffYears === 0 && diffDays < -1 && diffDays > -7) {
-      return fulldays[dt.getDay()];
-    } else if (diffYears >= 1) {
-      return month + " " + date + ", " + date.getFullYear();
     }
 
     return date.toLocaleDateString(["pt-BR"], {

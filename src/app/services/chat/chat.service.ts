@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from "@angular/core";
-import type { Message, WSMessage } from "../../models/message.models";
+import type { WSMessage } from "../../models/message.models";
 import type { CreateRoomRequest, Room } from "../../models/rooms.models";
 import { RoomService } from "../room/room.service";
 import { WebsocketService } from "./ws.service";
@@ -12,15 +12,13 @@ export class ChatService {
   private roomService = inject(RoomService);
 
   roomChanged = signal(0);
-
-  messages: Message[] = [];
   typingUsers: string[] = [];
 
   ngOnDestroy() {
     this.wsService.close();
   }
 
-  sendMessage(content: string) {
+  sendMessage(content: string, fileUrl: string | null) {
     const roomId = this.roomService.selectedRoom()?.id;
 
     if (!roomId || !this.wsService.connected) {
@@ -33,6 +31,7 @@ export class ChatService {
         payload: {
           action: "send_message",
           room_id: roomId,
+          file_url: fileUrl,
           content,
         },
       };
@@ -49,7 +48,6 @@ export class ChatService {
     }
 
     this.roomService.selectRoom(room);
-    this.messages = [];
     this.typingUsers = [];
 
     if (room) {
@@ -66,7 +64,6 @@ export class ChatService {
       if (!room) return;
 
       this.roomService.selectRoom(room);
-      this.messages = [];
       this.typingUsers = [];
 
       this.wsService.sendMessage({
@@ -105,7 +102,6 @@ export class ChatService {
       this.roomService.joinRoom(room.id).subscribe({
         next: () => {
           this.roomChanged.update((n) => n + 1);
-          this.messages = [];
           this.typingUsers = [];
 
           this.wsService.sendMessage(
@@ -135,46 +131,29 @@ export class ChatService {
     );
 
     this.roomChanged.update((n) => n + 1);
-    this.messages = [];
     this.typingUsers = [];
 
     this.roomService.selectRoom(null);
     return null;
   }
 
-  connect() {
-    const wsConn = this.wsService.connect();
+  exitRoom() {
+    const roomId = this.roomService.selectedRoom()?.id;
 
-    wsConn.subscribe({
-      next: (message) => {
-        try {
-          switch (message.type) {
-            case "new_message":
-              this.messages = [
-                message.data,
-                ...(Array.isArray(this.messages) ? this.messages : []),
-              ];
-              break;
-            case "typing":
-              this.typingUsers = message.users || [];
-              break;
-          }
-        } catch {}
-      },
-      error: (err) => {
-        console.error("WebSocket error:", err);
-        this.messages = [];
-        this.typingUsers = [];
-        this.roomService.selectRoom(null);
-      },
-      complete: () => {
-        console.log("WebSocket connection closed");
-        this.messages = [];
-        this.typingUsers = [];
-        this.roomService.selectRoom(null);
-      },
-    });
+    if (!roomId || !this.wsService.connected) {
+      return "Not connected";
+    }
 
-    return wsConn;
+    this.wsService.sendMessage(
+      JSON.stringify({
+        type: "connection",
+        payload: { action: "exit_room", room_id: roomId },
+      })
+    );
+
+    this.typingUsers = [];
+    this.roomService.selectRoom(null);
+
+    return null;
   }
 }

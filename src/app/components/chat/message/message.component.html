@@ -33,7 +33,17 @@
       </span>
     </div>
     }
-    <div class="font-normal text-neutral-300">{{ message()?.content }}</div>
+    <p
+      class="font-normal text-neutral-300 break-words break-all whitespace-pre-wrap hyphens-auto"
+    >
+      {{ message()?.content }}
+    </p>
+
+    @if (message()?.file_url) {
+    <div class="pb-1">
+      <img [src]="message()?.file_url" class="object-contain max-h-32" />
+    </div>
+    }
   </div>
   <div
     class="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover/message:opacity-100 transition-opacity"

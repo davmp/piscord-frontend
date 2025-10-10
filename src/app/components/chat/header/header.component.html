@@ -15,6 +15,7 @@
         shape="circle"
       />
     </div>
+    @if (selectedRoom()) {
     <div class="flex flex-col -space-y-1">
       <span class="text-white text-md">
         {{ selectedRoom()?.display_name }}
@@ -23,6 +24,11 @@
         {{ selectedRoom()?.member_count + " Membros" }}
       </span>
     </div>
+    } @else {
+    <div class="flex flex-col -space-y-1">
+      <span class="text-white text-md">Chat</span>
+    </div>
+    }
   </div>
 
   <div class="ml-auto flex items-center space-x-2">

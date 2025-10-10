@@ -23,13 +23,14 @@
       >
       </p-button>
       <p-button
-        label="Notificações"
+        label="Atividade"
         [dt]="ghost"
         fluid
         icon="pi pi-bell"
-        badge="3"
+        [badge]="unreadNotificationCount"
         badgeSeverity="danger"
-        styleClass="justify-start! transition-none! active:bg-neutral-00!"
+        styleClass="justify-start! transition-none!"
+        routerLink="/notifications"
       >
       </p-button>
     </ul>
@@ -54,8 +55,7 @@
       <p-button
         fluid
         styleClass="justify-start! transition-none! {{
-          room.id === roomService.selectedRoom()?.id &&
-            'bg-neutral-800! text-white!'
+          room.id === selectedRoom()?.id && 'bg-neutral-800! text-white!'
         }}"
         routerLink="/chat/{{ room.id }}"
         [dt]="ghost"

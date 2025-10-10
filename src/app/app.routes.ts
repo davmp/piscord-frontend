@@ -1,26 +1,26 @@
 import { Routes } from "@angular/router";
-import { LayoutComponent } from "./components/chat/layout/layout.component";
+import { LayoutComponent } from "./components/layout/layout.component";
 import { AuthGuardService } from "./services/auth/auth-guard.service";
 
 export const routes: Routes = [
   {
-    path: "chat",
+    path: "",
     component: LayoutComponent,
     children: [
+      {
+        path: "notifications",
+        loadComponent: () =>
+          import("./pages/notifications/notifications.component").then(
+            (m) => m.NotificationsComponent
+          ),
+      },
       {
         path: "",
         loadComponent: () =>
           import("./pages/chat/chat.component").then((m) => m.ChatComponent),
       },
-    ],
-    canActivate: [AuthGuardService],
-  },
-  {
-    path: "chat/:roomId",
-    component: LayoutComponent,
-    children: [
       {
-        path: "",
+        path: "chat/:roomId",
         loadComponent: () =>
           import("./pages/chat/chat.component").then((m) => m.ChatComponent),
       },
@@ -41,5 +41,5 @@ export const routes: Routes = [
         (m) => m.RegisterComponent
       ),
   },
-  { path: "**", redirectTo: "chat" },
+  { path: "**", redirectTo: "notifications" },
 ];
