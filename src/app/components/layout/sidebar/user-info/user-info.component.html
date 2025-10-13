@@ -25,7 +25,7 @@
       <p-avatar
         [image]="profile?.picture ?? '/assets/user-placeholder.png'"
         shape="circle"
-        class="size-full!"
+        class="size-full! [&_img]:object-cover"
       />
       <span
         class="absolute -bottom-1 -right-1 size-3 bg-green-500 border-3 border-neutral-800 rounded-full"
@@ -46,7 +46,7 @@
               <p-avatar
                 [image]="profile?.picture ?? '/assets/user-placeholder.png'"
                 shape="circle"
-                class="size-full!"
+                class="size-full! [&_img]:object-cover"
               />
               <span
                 class="absolute -bottom-0 -right-0 size-4 bg-green-500 border-3 border-neutral-700 rounded-full"
@@ -116,7 +116,7 @@
       <p-avatar
         [image]="profile?.picture ?? '/assets/user-placeholder.png'"
         shape="circle"
-        class="size-full!"
+        class="size-full! [&_img]:object-cover"
       />
       <span
         class="absolute bottom-0 -right-1 size-4 bg-green-500 border-3 border-neutral-800 rounded-full"

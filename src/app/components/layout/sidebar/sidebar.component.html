@@ -79,7 +79,7 @@
         <p-avatar
           [image]="room.picture ?? '/assets/user-placeholder.png'"
           shape="circle"
-          styleClass="min-w-8!"
+          styleClass="min-w-8! [&_img]:object-cover"
         />
         <span class="text-start text-nowrap truncate">{{
           room.display_name

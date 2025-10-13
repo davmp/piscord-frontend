@@ -12,7 +12,7 @@
     <p-avatar
       [image]="message()?.picture || '/assets/user-placeholder.png'"
       shape="circle"
-      styleClass="size-10!"
+      styleClass="size-10! [&_img]:object-cover"
     ></p-avatar>
     } @else {
     <span

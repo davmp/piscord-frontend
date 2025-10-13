@@ -13,6 +13,7 @@
       <p-avatar
         [image]="selectedRoom()?.picture ?? '/assets/user-placeholder.png'"
         shape="circle"
+        class="[&_img]:object-cover"
       />
     </div>
     @if (selectedRoom()) {
