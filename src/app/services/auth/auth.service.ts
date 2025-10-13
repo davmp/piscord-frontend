@@ -1,31 +1,51 @@
-import { isPlatformBrowser } from "@angular/common";
 import { HttpClient } from "@angular/common/http";
-import { inject, Injectable, PLATFORM_ID } from "@angular/core";
-import { Observable, shareReplay, tap } from "rxjs";
+import { inject, Injectable } from "@angular/core";
+import { Observable, shareReplay, Subject, tap } from "rxjs";
 import type {
   AuthResponse,
   LoginRequest,
   RegisterRequest,
 } from "../../models/auth.models";
-import type { User } from "../../models/user.models";
+import type { Profile, UpdateProfileRequest } from "../../models/user.models";
+import { DeviceService } from "../device.service";
 
 @Injectable({
   providedIn: "root",
 })
 export class AuthService {
   private readonly authApiUrl = "http://localhost:8000/api";
-  private readonly platformId = inject(PLATFORM_ID);
+  private readonly profileApiUrl = "http://localhost:8000/api/profile";
+  private readonly deviceService = inject(DeviceService);
   private http = inject(HttpClient);
 
-  profile(): Observable<any> {
-    return this.http.get(`${this.authApiUrl}/profile`);
+  profileChanged: Subject<Profile | null> = new Subject();
+
+  getProfile() {
+    return this.http.get<Profile>(this.profileApiUrl).pipe(
+      tap((profile) => {
+        this.profileChanged.next(profile);
+        this.setProfile(profile);
+      })
+    );
+  }
+
+  updateProfile(data: Partial<UpdateProfileRequest>) {
+    return this.http.put<Profile>(this.profileApiUrl, data).pipe(
+      tap((profile) => {
+        this.profileChanged.next(profile);
+        this.setProfile(profile);
+      })
+    );
   }
 
   login(data: LoginRequest): Observable<AuthResponse> {
     return this.http
       .post<AuthResponse>(`${this.authApiUrl}/auth/login`, data)
       .pipe(
-        tap((res) => this.setSession(res)),
+        tap((res) => {
+          this.profileChanged.next(res.user);
+          this.setSession(res);
+        }),
         shareReplay()
       );
   }
@@ -34,13 +54,16 @@ export class AuthService {
     return this.http
       .post<AuthResponse>(`${this.authApiUrl}/auth/register`, data)
       .pipe(
-        tap((res) => this.setSession(res)),
+        tap((res) => {
+          this.profileChanged.next(res.user);
+          this.setSession(res);
+        }),
         shareReplay()
       );
   }
 
   logout(): void {
-    if (isPlatformBrowser(this.platformId)) {
+    if (this.deviceService.isBrowser) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
     }
@@ -51,22 +74,20 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    if (isPlatformBrowser(this.platformId)) {
+    if (this.deviceService.isBrowser) {
       return localStorage.getItem("token");
     }
     return null;
   }
 
-  getUser(): User | null {
-    if (isPlatformBrowser(this.platformId)) {
-      const user = localStorage.getItem("user");
-      return user ? JSON.parse(user) : null;
+  private setProfile(user: Profile) {
+    if (this.deviceService.isBrowser) {
+      localStorage.setItem("user", JSON.stringify(user));
     }
-    return null;
   }
 
   private setSession(authResult: AuthResponse): void {
-    if (isPlatformBrowser(this.platformId)) {
+    if (this.deviceService.isBrowser) {
       localStorage.setItem("token", authResult.token);
       localStorage.setItem("user", JSON.stringify(authResult.user));
     }

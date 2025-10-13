@@ -1,0 +1,138 @@
+<div
+  class="w-full h-screen flex flex-col bg-neutral-800 space-y-4 md:space-y-8 sm:space-y-12"
+>
+  <header
+    class="min-h-[57px] flex items-center px-2 space-x-2 bg-neutral-800 border-b border-neutral-700/80"
+  >
+    <button
+      class="size-6 p-1 text-neutral-400 hover:text-neutral-200"
+      routerLink="/"
+    >
+      <i class="pi pi-angle-left"></i>
+    </button>
+    <span class="text-neutral-200"> Perfil </span>
+  </header>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="updateProfile()"
+    class="space-y-4 px-4 w-full max-w-4xl mx-auto text-neutral-400"
+  >
+    @if (errorMessage) {
+    <p-message severity="error" styleClass="mb-4!">{{
+      errorMessage
+    }}</p-message>
+    } @if (success) {
+    <p-message severity="success" styleClass="mb-4!"
+      >Perfil atualizado com sucesso</p-message
+    >
+    }
+
+    <div class="w-full flex flex-col space-y-2">
+      <div class="relative size-24">
+        <p-avatar
+          [image]="form.value.picture ?? '/assets/user-placeholder.png'"
+          shape="circle"
+          class="size-full!"
+        />
+      </div>
+    </div>
+
+    <div class="flex flex-col space-y-1">
+      <label for="username" class="text-sm" aria-required="true"
+        >Nome de usuário <span class="text-red-600">*</span></label
+      >
+      <p-inputgroup>
+        <p-inputgroup-addon styleClass="bg-neutral-800! border-neutral-600!">
+          <i class="pi pi-user"></i>
+        </p-inputgroup-addon>
+        <input
+          pInputText
+          type="text"
+          id="username"
+          formControlName="username"
+          aria-errormessage="username-error"
+          [dt]="inputThemes.outlined"
+          fluid
+        />
+      </p-inputgroup>
+      @if (form.get('username')?.invalid && form.get('username')?.touched) {
+      <small id="username-error" class="text-red-600"
+        >Nome de usuário inválido.</small
+      >
+      }
+    </div>
+
+    <div class="flex flex-col space-y-1">
+      <label for="picture" class="text-sm">URL da imagem</label>
+      <p-inputgroup>
+        <p-inputgroup-addon styleClass="bg-neutral-800! border-neutral-600!">
+          <i class="pi pi-image"></i>
+        </p-inputgroup-addon>
+        <input
+          pInputText
+          type="text"
+          id="picture"
+          formControlName="picture"
+          aria-errormessage="picture-error"
+          placeholder="https://example.com/image.png"
+          [dt]="inputThemes.outlined"
+          fluid
+        />
+      </p-inputgroup>
+      @if (form.get('picture')?.invalid && form.get('picture')?.touched) {
+      <small id="picture-error" class="text-red-600">URL inválida.</small>
+      }
+    </div>
+
+    <div class="flex flex-col space-y-1">
+      <label for="password" class="text-sm">Nova senha</label>
+      <p-inputgroup>
+        <p-inputgroup-addon styleClass="bg-neutral-800! border-neutral-600!">
+          <i class="pi pi-lock"></i>
+        </p-inputgroup-addon>
+        <p-password
+          type="password"
+          id="password"
+          formControlName="password"
+          aria-errormessage="password-error"
+          [toggleMask]="true"
+          inputStyleClass="bg-neutral-800/60! focus:border-neutral-500! border-neutral-600! hover:border-neutral-500! text-neutral-100!"
+          fluid
+        />
+      </p-inputgroup>
+      @if (form.get('password')?.invalid && form.get('password')?.touched) {
+      <small id="password-error" class="text-red-600">Senha inválida.</small>
+      }
+    </div>
+
+    <div class="flex flex-col space-y-1">
+      <label for="bio" class="text-sm" aria-required="true">Bio</label>
+      <textarea
+        pTextarea
+        id="bio"
+        formControlName="bio"
+        aria-errormessage="bio-error"
+        rows="2"
+        [maxlength]="200"
+        [dt]="inputThemes.outlined"
+        [autoResize]="true"
+        fluid
+      ></textarea>
+      @if (form.get('bio')?.invalid && form.get('bio')?.touched) {
+      <small id="bio-error" class="text-red-600">Biografia inválida.</small>
+      }
+    </div>
+
+    <div class="flex justify-end gap-2 mt-4">
+      <p-button
+        label="Editar"
+        type="submit"
+        [loading]="isLoading"
+        [dt]="buttonThemes.ghost"
+        styleClass="bg-[#5865F2]! hover:bg-[#4752C4]! text-white!"
+        fluid
+      ></p-button>
+    </div>
+  </form>
+</div>

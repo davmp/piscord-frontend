@@ -8,16 +8,23 @@ export const routes: Routes = [
     component: LayoutComponent,
     children: [
       {
+        path: "",
+        loadComponent: () =>
+          import("./pages/chat/chat.component").then((m) => m.ChatComponent),
+      },
+      {
+        path: "settings",
+        loadComponent: () =>
+          import("./pages/settings/settings.component").then(
+            (m) => m.SettingsComponent
+          ),
+      },
+      {
         path: "notifications",
         loadComponent: () =>
           import("./pages/notifications/notifications.component").then(
             (m) => m.NotificationsComponent
           ),
-      },
-      {
-        path: "",
-        loadComponent: () =>
-          import("./pages/chat/chat.component").then((m) => m.ChatComponent),
       },
       {
         path: "chat/:roomId",
@@ -41,5 +48,5 @@ export const routes: Routes = [
         (m) => m.RegisterComponent
       ),
   },
-  { path: "**", redirectTo: "notifications" },
+  { path: "**", redirectTo: "" },
 ];

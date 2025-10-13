@@ -1,11 +1,4 @@
-import {
-  Component,
-  computed,
-  effect,
-  inject,
-  output,
-  signal,
-} from "@angular/core";
+import { Component, computed, effect, inject, output } from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { AvatarModule } from "primeng/avatar";
 import { ButtonModule } from "primeng/button";
@@ -14,7 +7,7 @@ import type { Room } from "../../../models/rooms.models";
 import { ChatService } from "../../../services/chat/chat.service";
 import { NotificationService } from "../../../services/notification/notification.service";
 import { RoomService } from "../../../services/room/room.service";
-import { buttonThemes } from "../../../themes/form.themes";
+import * as formThemes from "../../../themes/form.themes";
 import { UserInfoComponent } from "./user-info/user-info.component";
 
 @Component({
@@ -33,13 +26,13 @@ export class SidebarComponent {
   private chatService = inject(ChatService);
   private notificationService = inject(NotificationService);
 
-  isLoading = signal(false);
+  isLoading = false;
   unreadNotificationCount: string | undefined = undefined;
-  rooms = signal<Room[]>([]);
-
-  openModal = output<"createRoom" | "findRooms">();
+  buttonThemes = formThemes.buttonThemes;
+  rooms: Room[] = [];
 
   selectedRoom = computed(() => this.roomService.selectedRoom());
+  openModal = output<"createRoom" | "findRooms">();
 
   constructor() {
     this.loadRooms();
@@ -55,24 +48,12 @@ export class SidebarComponent {
     });
   }
 
-  get loading() {
-    return this.isLoading();
-  }
-
-  get roomsList() {
-    return this.rooms();
-  }
-
-  get ghost() {
-    return buttonThemes.ghost;
-  }
-
   loadRooms() {
-    this.isLoading.set(true);
+    this.isLoading = true;
     this.roomService.getMyRooms().subscribe((rooms) => {
-      this.rooms.set(rooms.data);
+      this.rooms = rooms.data;
     });
-    this.isLoading.set(false);
+    this.isLoading = false;
   }
 
   loadNotificationCount() {

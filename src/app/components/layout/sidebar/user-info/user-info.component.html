@@ -19,11 +19,11 @@
   </div>
   <div
     class="flex flex-col items-center text-neutral-400"
-    (click)="visible.set(true)"
+    (click)="visible = true"
   >
     <div class="relative size-6">
       <p-avatar
-        [image]="user.picture ?? '/assets/user-placeholder.png'"
+        [image]="profile?.picture ?? '/assets/user-placeholder.png'"
         shape="circle"
         class="size-full!"
       />
@@ -44,7 +44,7 @@
           <div>
             <div class="relative size-20">
               <p-avatar
-                [image]="user.picture ?? '/assets/user-placeholder.png'"
+                [image]="profile?.picture ?? '/assets/user-placeholder.png'"
                 shape="circle"
                 class="size-full!"
               />
@@ -55,16 +55,16 @@
           </div>
           <div class="flex-1 overflow-hidden text-ellipsis space-y-1">
             <p class="text-xl font-semibold text-neutral-100 truncate">
-              {{ user.username }}
+              {{ profile?.username }}
             </p>
-            <p class="text-xs text-neutral-400 truncate">#{{ user.id }}</p>
+            <p class="text-xs text-neutral-400 truncate">#{{ profile?.id }}</p>
           </div>
           <p-button
             styleClass="rounded-full! text-neutral-400"
             class="mt-4"
             fluid
             label="Editar Perfil"
-            routerLink="/profile"
+            routerLink="/settings"
             [dt]="buttonThemes.primary"
           >
             <i pButtonIcon class="pi pi-pencil text-sm!"></i>
@@ -73,15 +73,16 @@
       </ng-template>
 
       <div class="space-y-4">
+        @if (profile?.bio) {
         <div class="bg-neutral-700 w-full flex flex-col rounded-2xl px-4 py-3">
           <span class="font-medium">Bio</span>
-          <p class="text-sm font-normal text-neutral-300">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat.
+          <p
+            class="text-sm font-normal text-neutral-300 break-words break-all whitespace-pre-wrap hyphens-auto"
+          >
+            {{ profile?.bio }}
           </p>
         </div>
+        }
 
         <div class="bg-neutral-700 w-full flex flex-col rounded-2xl px-4 py-3">
           <span>Amigos</span>
@@ -113,7 +114,7 @@
   >
     <div class="relative size-9">
       <p-avatar
-        [image]="user.picture ?? '/assets/user-placeholder.png'"
+        [image]="profile?.picture ?? '/assets/user-placeholder.png'"
         shape="circle"
         class="size-full!"
       />
@@ -123,9 +124,9 @@
     </div>
     <div class="flex-1 overflow-hidden text-ellipsis">
       <p class="text-sm font-semibold truncate">
-        {{ user.username }}
+        {{ profile?.username }}
       </p>
-      <p class="text-xs text-neutral-400 truncate">#{{ user.id }}</p>
+      <p class="text-xs text-neutral-400 truncate">#{{ profile?.id }}</p>
     </div>
     <div class="ml-auto">
       <button

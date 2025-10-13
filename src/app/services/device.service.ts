@@ -7,7 +7,8 @@ export class DeviceService {
   private readonly mobileWidthThreshold = 768;
   private readonly platformId = inject(PLATFORM_ID);
   private readonly router = inject(Router);
-  private readonly isBrowser = isPlatformBrowser(this.platformId);
+
+  isBrowser = isPlatformBrowser(this.platformId);
 
   isMobile(): boolean {
     if (!this.isBrowser) {

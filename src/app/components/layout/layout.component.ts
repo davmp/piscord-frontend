@@ -1,6 +1,7 @@
 import { Component, inject, signal } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
 import { SplitterModule } from "primeng/splitter";
+import { AuthService } from "../../services/auth/auth.service";
 import { DeviceService } from "../../services/device.service";
 import { CreateRoomComponent } from "../chat/modals/create-room/create-room.component";
 import { FindRoomComponent } from "../chat/modals/find-room/find-room.component";
@@ -18,6 +19,7 @@ import { SidebarComponent } from "./sidebar/sidebar.component";
   templateUrl: "./layout.component.html",
 })
 export class LayoutComponent {
+  authService = inject(AuthService);
   private deviceService = inject(DeviceService);
 
   createRoomModalVisible = signal(false);

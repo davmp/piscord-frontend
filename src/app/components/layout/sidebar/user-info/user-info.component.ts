@@ -1,11 +1,11 @@
-import { Component, inject, output, signal } from "@angular/core";
+import { Component, inject, output } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
 import type { MenuItem } from "primeng/api";
 import { Avatar } from "primeng/avatar";
 import { Button } from "primeng/button";
 import { Drawer } from "primeng/drawer";
 import { Menu } from "primeng/menu";
-import type { User } from "../../../../models/user.models";
+import type { Profile } from "../../../../models/user.models";
 import { AuthService } from "../../../../services/auth/auth.service";
 import { DeviceService } from "../../../../services/device.service";
 import * as formThemes from "../../../../themes/form.themes";
@@ -14,15 +14,14 @@ import * as formThemes from "../../../../themes/form.themes";
   selector: "app-user-info",
   imports: [Avatar, Menu, Drawer, Button, RouterLink],
   templateUrl: "./user-info.component.html",
-  styles: ``,
 })
 export class UserInfoComponent {
   private router = inject(Router);
   private authService = inject(AuthService);
   private deviceService = inject(DeviceService);
 
-  user: Partial<User> = {};
-  visible = signal(false);
+  profile: Profile | null = null;
+  visible = false;
   setOpenModal = output<"createRoom" | "findRooms">();
 
   menuThemes = formThemes.menuThemes;
@@ -63,14 +62,14 @@ export class UserInfoComponent {
     },
   ];
 
-  ngOnInit() {
-    const user = this.authService.getUser();
+  constructor() {
+    this.authService.getProfile().subscribe((profile) => {
+      this.profile = profile;
+    });
 
-    if (user) {
-      this.user = user;
-    } else {
-      this.authService.logout();
-    }
+    this.authService.profileChanged.subscribe((newProfile) => {
+      this.profile = newProfile;
+    });
   }
 
   handleLogout() {

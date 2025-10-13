@@ -1,8 +1,8 @@
-import type { User } from "./user.models";
+import type { Profile } from "./user.models";
 
 export interface AuthResponse {
   token: string;
-  user: User;
+  user: Profile;
 }
 
 export interface LoginRequest {
