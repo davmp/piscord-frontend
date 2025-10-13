@@ -7,7 +7,7 @@ import {
   signal,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { Router, RouterLink } from "@angular/router";
+import { Router } from "@angular/router";
 import { AvatarModule } from "primeng/avatar";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
@@ -25,7 +25,6 @@ import * as themes from "../../../../themes/form.themes";
     ButtonModule,
     AvatarModule,
     SkeletonModule,
-    RouterLink,
     InputText,
     FormsModule,
   ],
@@ -67,8 +66,9 @@ export class FindRoomComponent {
   }
 
   handleJoinRoom(roomId: string) {
-    this.chatService.joinRoom(roomId);
-    this.router.navigateByUrl(`/chat/${roomId}`);
+    this.chatService.joinRoom(roomId)?.subscribe((room) => {
+      this.router.navigateByUrl(`/chat/${room.id}`);
+    });
     this.handleSetVisible(false);
   }
 

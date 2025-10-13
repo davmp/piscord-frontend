@@ -1,4 +1,5 @@
 import { inject, Injectable, signal } from "@angular/core";
+import { tap, type Observable } from "rxjs";
 import type { WSMessage } from "../../models/message.models";
 import type { CreateRoomRequest, Room } from "../../models/rooms.models";
 import { RoomService } from "../room/room.service";
@@ -90,30 +91,32 @@ export class ChatService {
     return obs;
   }
 
-  joinRoom(newRoomId: string) {
+  joinRoom(newRoomId: string): Observable<Room> | null {
     if (!this.wsService.connected) {
-      return "Not connected";
+      console.warn("Websocket not connected");
+      return null;
     }
 
-    this.roomService.getRoom(newRoomId).subscribe((room) => {
-      if (!room) return;
+    return this.roomService.getRoom(newRoomId).pipe(
+      tap((room) => {
+        if (!room) return;
 
-      this.roomService.selectRoom(room);
-      this.roomService.joinRoom(room.id).subscribe({
-        next: () => {
-          this.roomChanged.update((n) => n + 1);
-          this.typingUsers = [];
+        this.roomService.selectRoom(room);
+        this.roomService.joinRoom(room.id).subscribe({
+          next: () => {
+            this.roomChanged.update((n) => n + 1);
+            this.typingUsers = [];
 
-          this.wsService.sendMessage(
-            JSON.stringify({
-              type: "connection",
-              payload: { action: "join_room", room_id: newRoomId },
-            })
-          );
-        },
-      });
-    });
-    return null;
+            this.wsService.sendMessage(
+              JSON.stringify({
+                type: "connection",
+                payload: { action: "join_room", room_id: newRoomId },
+              })
+            );
+          },
+        });
+      })
+    );
   }
 
   leaveRoom() {

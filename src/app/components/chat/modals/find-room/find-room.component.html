@@ -80,7 +80,6 @@
         styleClass="ml-auto! h-8! p-2! rounded-sm! bg-neutral-800! hover:opacity-90"
         icon="pi pi-arrow-right"
         iconPos="right"
-        routerLink="/chat/{{ room.id }}"
         [dt]="buttonThemes.ghost"
         (click)="handleEnterRoom(room.id)"
       >
@@ -89,7 +88,6 @@
       <p-button
         label="Entrar"
         styleClass="ml-auto! h-8 px-2! bg-[#586EF6]! text-white! rounded-sm! hover:opacity-90"
-        routerLink="/chat/{{ room.id }}"
         [dt]="buttonThemes.ghost"
         (click)="handleJoinRoom(room.id)"
       >
