@@ -1,22 +1,22 @@
 <div
-  class="w-full h-screen flex flex-col bg-neutral-800 space-y-4 md:space-y-8 sm:space-y-12"
+  class="w-full h-screen flex flex-col bg-stone-800 space-y-4 md:space-y-8 sm:space-y-12"
 >
   <header
-    class="min-h-[57px] flex items-center px-2 space-x-2 bg-neutral-800 border-b border-neutral-700/80"
+    class="min-h-[57px] flex items-center px-2 space-x-2 bg-stone-800 border-b border-stone-700/80"
   >
     <button
-      class="size-6 p-1 text-neutral-400 hover:text-neutral-200"
+      class="size-6 p-1 text-stone-400 hover:text-stone-200 grid place-content-center"
       routerLink="/"
     >
       <i class="pi pi-angle-left"></i>
     </button>
-    <span class="text-neutral-200"> Perfil </span>
+    <span class="text-stone-200"> Configurações </span>
   </header>
 
   <form
     [formGroup]="form"
     (ngSubmit)="updateProfile()"
-    class="space-y-4 px-4 w-full max-w-4xl mx-auto text-neutral-400"
+    class="space-y-4 px-4 w-full max-w-4xl mx-auto text-stone-400"
   >
     @if (errorMessage) {
     <p-message severity="error" styleClass="mb-4!">{{
@@ -31,9 +31,9 @@
     <div class="w-full flex flex-col space-y-2">
       <div class="relative size-24">
         <p-avatar
-          [image]="form.value.picture ?? '/assets/user-placeholder.png'"
+          [image]="form.value.picture ?? '/assets/assets/piscord.svg'"
           shape="circle"
-          class="size-full! [&_img]:object-cover"
+          class="size-full! [&_img]:object-cover bg-lime-600!"
         />
       </div>
     </div>
@@ -43,7 +43,7 @@
         >Nome de usuário <span class="text-red-600">*</span></label
       >
       <p-inputgroup>
-        <p-inputgroup-addon styleClass="bg-neutral-800! border-neutral-600!">
+        <p-inputgroup-addon styleClass="bg-stone-800! border-stone-600!">
           <i class="pi pi-user"></i>
         </p-inputgroup-addon>
         <input
@@ -66,7 +66,7 @@
     <div class="flex flex-col space-y-1">
       <label for="picture" class="text-sm">URL da imagem</label>
       <p-inputgroup>
-        <p-inputgroup-addon styleClass="bg-neutral-800! border-neutral-600!">
+        <p-inputgroup-addon styleClass="bg-stone-800! border-stone-600!">
           <i class="pi pi-image"></i>
         </p-inputgroup-addon>
         <input
@@ -88,7 +88,7 @@
     <div class="flex flex-col space-y-1">
       <label for="password" class="text-sm">Nova senha</label>
       <p-inputgroup>
-        <p-inputgroup-addon styleClass="bg-neutral-800! border-neutral-600!">
+        <p-inputgroup-addon styleClass="bg-stone-800! border-stone-600!">
           <i class="pi pi-lock"></i>
         </p-inputgroup-addon>
         <p-password
@@ -97,7 +97,7 @@
           formControlName="password"
           aria-errormessage="password-error"
           [toggleMask]="true"
-          inputStyleClass="bg-neutral-800/60! focus:border-neutral-500! border-neutral-600! hover:border-neutral-500! text-neutral-100!"
+          inputStyleClass="bg-stone-800/60! focus:border-stone-500! border-stone-600! hover:border-stone-500! text-stone-100!"
           fluid
         />
       </p-inputgroup>
@@ -129,8 +129,7 @@
         label="Editar"
         type="submit"
         [loading]="isLoading"
-        [dt]="buttonThemes.ghost"
-        styleClass="bg-[#5865F2]! hover:bg-[#4752C4]! text-white!"
+        [dt]="buttonThemes.primary"
         fluid
       ></p-button>
     </div>

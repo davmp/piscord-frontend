@@ -1,19 +1,19 @@
 <div
-  class="w-full h-[57px] bg-neutral-800 border-b flex items-center border-neutral-700/80 px-4"
+  class="w-full h-[57px] bg-stone-800 border-b flex items-center border-stone-700/80 px-4"
 >
   <div class="h-full flex items-center space-x-2">
     @if (isMobile()) {
     <span styleClass="size-8 cursor-pointer group/button" routerLink="/">
       <i
-        class="pi pi-arrow-left text-neutral-400 group-hover/button:text-neutral-100!"
+        class="pi pi-arrow-left text-stone-400 group-hover/button:text-stone-100! grid place-content-center"
       ></i>
     </span>
     }
     <div class="h-full flex items-center">
       <p-avatar
-        [image]="selectedRoom()?.picture ?? '/assets/user-placeholder.png'"
+        [image]="selectedRoom()?.picture ?? '/assets/piscord.svg'"
         shape="circle"
-        class="[&_img]:object-cover"
+        class="[&_img]:object-cover bg-lime-600!"
       />
     </div>
     @if (selectedRoom()) {
@@ -21,7 +21,7 @@
       <span class="text-white text-md">
         {{ selectedRoom()?.display_name }}
       </span>
-      <span class="text-neutral-400 text-sm">
+      <span class="text-stone-400 text-sm">
         {{ selectedRoom()?.member_count + " Membros" }}
       </span>
     </div>
@@ -36,7 +36,7 @@
     <p-button
       icon="pi pi-user-plus"
       [dt]="ghost"
-      styleClass="size-8! bg-neutral-800! hover:bg-neutral-700/50! transition-colors!"
+      styleClass="size-8! bg-stone-800! hover:bg-stone-700/50! transition-colors!"
     >
     </p-button>
   </div>

@@ -6,8 +6,8 @@ import { Button } from "primeng/button";
 import { Drawer } from "primeng/drawer";
 import { Menu } from "primeng/menu";
 import type { Profile } from "../../../../models/user.models";
-import { AuthService } from "../../../../services/auth/auth.service";
 import { DeviceService } from "../../../../services/device.service";
+import { AuthService } from "../../../../services/user/auth/auth.service";
 import * as formThemes from "../../../../themes/form.themes";
 
 @Component({

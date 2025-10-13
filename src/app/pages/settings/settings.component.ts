@@ -15,7 +15,7 @@ import { Message } from "primeng/message";
 import { Password } from "primeng/password";
 import { Textarea } from "primeng/textarea";
 import type { Profile, UpdateProfileRequest } from "../../models/user.models";
-import { AuthService } from "../../services/auth/auth.service";
+import { AuthService } from "../../services/user/auth/auth.service";
 import * as themes from "../../themes/form.themes";
 
 @Component({

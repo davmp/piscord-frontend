@@ -7,7 +7,7 @@
   [breakpoints]="{ '960px': '50vw', '640px': '75vw', '480px': '95vw' }"
   [style]="{ width: '25rem' }"
   [dt]="dialogThemes.custom"
-  styleClass="[&_.p-dialog-close-button]:rounded-lg! [&_.p-dialog-close-button]:hover:bg-neutral-600/60! [&_.p-dialog-close-button]:text-neutral-400! [&_.p-dialog-close-button]:size-7! [&_.p-dialog-close-button]:p-1.5!"
+  styleClass="[&_.p-dialog-close-button]:rounded-lg! [&_.p-dialog-close-button]:hover:bg-stone-600/60! [&_.p-dialog-close-button]:text-stone-400! [&_.p-dialog-close-button]:size-7! [&_.p-dialog-close-button]:p-1.5!"
 >
   <span class="p-text-secondary block mb-4"
     >Crie uma sala e convide seus amigos para participar.</span
@@ -72,15 +72,12 @@
         label="Cancelar"
         severity="secondary"
         (click)="handleSetVisible(false)"
-        [dt]="buttonThemes.ghost"
         [disabled]="loading"
       />
       <p-button
         label="Criar"
         type="submit"
         [loading]="loading"
-        [dt]="buttonThemes.ghost"
-        styleClass="bg-[#5865F2]! hover:bg-[#4752C4]! text-white!"
         fluid
       ></p-button>
     </div>

@@ -1,17 +1,17 @@
-<div class="w-full h-screen flex flex-col bg-neutral-800">
+<div class="w-full h-screen flex flex-col bg-stone-800">
   <header
-    class="min-h-[57px] flex items-center px-2 space-x-2 bg-neutral-800 border-b border-neutral-700/80"
+    class="min-h-[57px] flex items-center px-2 space-x-2 bg-stone-800 border-b border-stone-700/80"
   >
     <button
-      class="size-6 p-1 text-neutral-400 hover:text-neutral-200"
+      class="size-6 p-1 text-stone-400 hover:text-stone-200 grid place-content-center"
       routerLink="/"
     >
       <i class="pi pi-angle-left"></i>
     </button>
-    <span class="text-neutral-200"> Atividade </span>
+    <span class="text-stone-200"> Atividade </span>
     <div class="ml-auto flex items-center gap-2 pr-1">
       <button class="size-6 p-1" (click)="handleReadAllNotifications()">
-        <i class="pi pi-eye text-neutral-400 group-hover:text-neutral-100"></i>
+        <i class="pi pi-eye text-stone-400 group-hover:text-stone-100"></i>
       </button>
       <button class="size-6 p-1" (click)="handleDeleteAllNotifications()">
         <i class="pi pi-trash text-red-400 group-hover:text-red-100"></i>
@@ -25,39 +25,38 @@
       <div>carregando...</div>
       } @else if (notifications.length === 0) {
       <div
-        class="absolute inset-0 flex flex-col items-center justify-center text-center text-neutral-400 p-4"
+        class="absolute inset-0 flex flex-col items-center justify-center text-center text-stone-400 p-4"
       >
-        <i class="pi pi-bell mb-2 text-4xl! text-neutral-600"></i>
+        <i class="pi pi-bell mb-2 text-4xl! text-stone-600"></i>
         Nenhuma notificacão ainda.<br />Comece procurando ou criando uma sala!
       </div>
       } @for(notification of notifications; track notification.id) {
       <button
         type="button"
-        class="flex items-start w-full p-4 sm:rounded-md gap-4 text-start hover:bg-neutral-700/50 group
-        {{ notification.read_at ? 'bg-neutral-800' : 'bg-neutral-700' }}"
+        class="flex items-start w-full p-4 sm:rounded-md gap-4 text-start hover:bg-stone-700/50 group
+        {{ notification.read_at ? 'bg-stone-800' : 'bg-stone-700' }}"
         (click)="handleClickNotification(notification)"
       >
         <p-avatar
-          [image]="notification.picture ?? '/assets/user-placeholder.png'"
+          [image]="notification.picture ?? '/assets/assets/piscord.svg'"
           size="large"
-          class="min-w-12! rounded-lg! overflow-hidden! [&_img]:object-cover"
+          class="min-w-12! rounded-lg! overflow-hidden! [&_img]:object-cover bg-lime-600!"
         />
         <div class="w-full flex flex-col items-start overflow-hidden space-y-1">
           <div class="w-full flex items-center justify-between">
-            <span
-              class="w-full text-md text-neutral-300 text-nowrap truncate"
-              >{{ notification.title }}</span
-            >
-            <span class="text-xs text-neutral-500 text-nowrap">{{
+            <span class="w-full text-md text-stone-300 text-nowrap truncate">{{
+              notification.title
+            }}</span>
+            <span class="text-xs text-stone-500 text-nowrap">{{
               formattedDate(notification.created_at)
             }}</span>
           </div>
-          <span class="w-full text-xs text-neutral-500 line-clamp-2 truncate">{{
+          <span class="w-full text-xs text-stone-500 line-clamp-2 truncate">{{
             notification.content
           }}</span>
         </div>
         <button
-          class="min-w-min h-full m-auto hidden group-hover:flex items-center gap-2 justify-center text-neutral-400 hover:text-neutral-200"
+          class="min-w-min h-full m-auto hidden group-hover:flex items-center gap-2 justify-center text-stone-400 hover:text-stone-200"
           (click)="
             $event.stopPropagation(); handleDeleteNotification(notification.id)
           "

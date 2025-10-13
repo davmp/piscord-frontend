@@ -1,14 +1,12 @@
 <div
-  class="relative w-screen h-screen flex items-center justify-center bg-[url('/assets/auth-bg.svg')] bg-cover bg-center"
+  class="relative w-screen h-screen flex items-center justify-center bg-[url('/assets/auth-bg.png')] bg-cover bg-center"
 >
   <div
-    class="max-w-md w-full h-fit bg-neutral-700 p-8 rounded-lg shadow-lg text-white z-10 space-y-4"
+    class="max-w-md w-full h-fit bg-stone-700 p-8 rounded-lg shadow-lg text-white z-10 space-y-4"
   >
     <div class="text-center space-y-2">
       <h2 class="text-xl font-semibold">Bem vindo(a) de volta!</h2>
-      <p class="text-sm text-neutral-300">
-        Estamos felizes em vê-lo novamente.
-      </p>
+      <p class="text-sm text-stone-300">Estamos felizes em vê-lo novamente.</p>
     </div>
 
     <form [formGroup]="loginForm" (ngSubmit)="login()" class="space-y-4">
@@ -20,7 +18,7 @@
           id="username"
           formControlName="username"
           aria-errormessage="username-error"
-          [dt]="outlined"
+          [dt]="inputThemes.outlined"
           fluid
         />
         @if (loginForm.get('username')?.invalid &&
@@ -39,7 +37,7 @@
           aria-errormessage="password-error"
           [feedback]="false"
           [toggleMask]="true"
-          inputStyleClass="bg-neutral-800/60! rounded-lg! focus:border-neutral-500! border-neutral-600! hover:border-neutral-500! text-neutral-100!"
+          inputStyleClass="bg-stone-800/60! rounded-lg! focus:border-stone-500! border-stone-600! hover:border-stone-500! text-stone-100!"
           fluid
         />
         @if (loginForm.get('password')?.invalid &&
@@ -50,17 +48,12 @@
         }
       </div>
 
-      <p-button
-        type="submit"
-        [dt]="ghost"
-        styleClass="bg-[#5865F2]! hover:bg-[#4752C4]! text-white! mt-2"
-        fluid
-      >
+      <p-button type="submit" [dt]="buttonThemes.primary" fluid>
         Entrar
       </p-button>
-      <span class="text-neutral-400 text-sm"
+      <span class="text-stone-400 text-sm"
         >Precisa de uma conta?
-        <a routerLink="/register" class="text-[#7e84c4] hover:underline"
+        <a routerLink="/register" class="hover:underline text-[#99c289]"
           >Cadastre-se</a
         >
       </span>
@@ -68,9 +61,9 @@
   </div>
 
   <div
-    class="absolute top-6 left-6 flex items-center space-x-2 select-none text-gray-200"
+    class="absolute top-6 left-6 flex items-center select-none text-gray-100"
   >
-    <img src="/assets/logo.svg" alt="Logo" class="size-7" />
-    <h1 class="text-lg font-bold">Piscord</h1>
+    <img src="/assets/piscord.svg" alt="Logo" class="size-12" />
+    <h1 class="text-xl font-bold">Piscord</h1>
   </div>
 </div>

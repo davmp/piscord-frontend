@@ -19,7 +19,11 @@ export class ChatService {
     this.wsService.close();
   }
 
-  sendMessage(content: string, fileUrl: string | null) {
+  sendMessage(
+    content: string,
+    replyMessageId: string | null,
+    fileUrl: string | null
+  ) {
     const roomId = this.roomService.selectedRoom()?.id;
 
     if (!roomId || !this.wsService.connected) {
@@ -33,6 +37,31 @@ export class ChatService {
           action: "send_message",
           room_id: roomId,
           file_url: fileUrl,
+          reply_to: replyMessageId,
+          content,
+        },
+      };
+
+      this.wsService.sendMessage(message);
+      return null;
+    }
+    return "Too small";
+  }
+
+  editMessage(messageId: string, content: string) {
+    const roomId = this.roomService.selectedRoom()?.id;
+
+    if (!roomId || !this.wsService.connected) {
+      return "Not connected";
+    }
+
+    if (content.trim().length > 0) {
+      const message: WSMessage = {
+        type: "message",
+        payload: {
+          action: "edit_message",
+          room_id: roomId,
+          message_id: messageId,
           content,
         },
       };

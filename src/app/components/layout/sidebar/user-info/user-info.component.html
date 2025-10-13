@@ -1,15 +1,15 @@
 @if (isMobile()) {
 <div
-  class="w-full flex items-center justify-around border-t border-t-neutral-700/50 bg-neutral-800 h-14 p-2 pb-4 gap-2"
+  class="w-full flex items-center justify-around border-t border-t-neutral-700/50 bg-stone-800 h-14 p-2 pb-4 gap-2"
 >
-  <div class="flex flex-col items-center text-neutral-100">
+  <div class="flex flex-col items-center text-stone-100">
     <div class="size-6 grid place-content-center">
       <i class="pi pi-home"></i>
     </div>
     <span class="text-xs">Home</span>
   </div>
   <div
-    class="flex flex-col items-center text-neutral-400"
+    class="flex flex-col items-center text-stone-400"
     routerLink="/notifications"
   >
     <div class="size-6 grid place-content-center">
@@ -18,23 +18,23 @@
     <span class="text-xs">Atividade</span>
   </div>
   <div
-    class="flex flex-col items-center text-neutral-400"
+    class="flex flex-col items-center text-stone-400"
     (click)="visible = true"
   >
     <div class="relative size-6">
       <p-avatar
-        [image]="profile?.picture ?? '/assets/user-placeholder.png'"
+        [image]="profile?.picture ?? '/assets/assets/piscord.svg'"
         shape="circle"
-        class="size-full! [&_img]:object-cover"
+        class="size-full! [&_img]:object-cover bg-lime-600!"
       />
       <span
-        class="absolute -bottom-1 -right-1 size-3 bg-green-500 border-3 border-neutral-800 rounded-full"
+        class="absolute -bottom-1 -right-1 size-3 bg-green-500 border-3 border-stone-800 rounded-full"
       ></span>
     </div>
     <span class="text-xs">Eu</span>
     <p-drawer
       [dt]="menuThemes.ghost"
-      styleClass="bg-neutral-800! border-[1px_0_0_0]! border-neutral-700! h-fit! *:text-neutral-400!"
+      styleClass="bg-stone-800! border-[1px_0_0_0]! border-stone-700! h-fit! *:text-stone-400!"
       [(visible)]="visible"
       [closable]="false"
       position="bottom"
@@ -44,23 +44,23 @@
           <div>
             <div class="relative size-20">
               <p-avatar
-                [image]="profile?.picture ?? '/assets/user-placeholder.png'"
+                [image]="profile?.picture ?? '/assets/assets/piscord.svg'"
                 shape="circle"
-                class="size-full! [&_img]:object-cover"
+                class="size-full! [&_img]:object-cover bg-lime-600!"
               />
               <span
-                class="absolute -bottom-0 -right-0 size-4 bg-green-500 border-3 border-neutral-700 rounded-full"
+                class="absolute -bottom-0 -right-0 size-4 bg-green-500 border-3 border-stone-700 rounded-full"
               ></span>
             </div>
           </div>
           <div class="flex-1 overflow-hidden text-ellipsis space-y-1">
-            <p class="text-xl font-semibold text-neutral-100 truncate">
+            <p class="text-xl font-semibold text-stone-100 truncate">
               {{ profile?.username }}
             </p>
-            <p class="text-xs text-neutral-400 truncate">#{{ profile?.id }}</p>
+            <p class="text-xs text-stone-400 truncate">#{{ profile?.id }}</p>
           </div>
           <p-button
-            styleClass="rounded-full! text-neutral-400"
+            styleClass="rounded-full! text-stone-400"
             class="mt-4"
             fluid
             label="Editar Perfil"
@@ -74,20 +74,20 @@
 
       <div class="space-y-4">
         @if (profile?.bio) {
-        <div class="bg-neutral-700 w-full flex flex-col rounded-2xl px-4 py-3">
+        <div class="bg-stone-700 w-full flex flex-col rounded-2xl px-4 py-3">
           <span class="font-medium">Bio</span>
           <p
-            class="text-sm font-normal text-neutral-300 break-words break-all whitespace-pre-wrap hyphens-auto"
+            class="text-sm font-normal text-stone-300 break-words break-all whitespace-pre-wrap hyphens-auto"
           >
             {{ profile?.bio }}
           </p>
         </div>
         }
 
-        <div class="bg-neutral-700 w-full flex flex-col rounded-2xl px-4 py-3">
+        <div class="bg-stone-700 w-full flex flex-col rounded-2xl px-4 py-3">
           <span>Amigos</span>
           <ul>
-            <li class="mt-2 text-center text-sm text-neutral-500">
+            <li class="mt-2 text-center text-sm text-stone-500">
               Nenhum amigo ainda.
             </li>
           </ul>
@@ -110,28 +110,28 @@
 } @else {
 <div class="z-100 p-2 pt-0">
   <div
-    class="h-14 bg-neutral-800 border border-neutral-700/20 rounded-lg flex items-center space-x-2 px-3"
+    class="h-14 bg-stone-800 border border-stone-700/20 rounded-lg flex items-center space-x-2 px-3"
   >
     <div class="relative size-9">
       <p-avatar
-        [image]="profile?.picture ?? '/assets/user-placeholder.png'"
+        [image]="profile?.picture ?? '/assets/assets/piscord.svg'"
         shape="circle"
-        class="size-full! [&_img]:object-cover"
+        class="size-full! [&_img]:object-cover bg-lime-600!"
       />
       <span
-        class="absolute bottom-0 -right-1 size-4 bg-green-500 border-3 border-neutral-800 rounded-full"
+        class="absolute bottom-0 -right-1 size-4 bg-green-500 border-3 border-stone-800 rounded-full"
       ></span>
     </div>
     <div class="flex-1 overflow-hidden text-ellipsis">
       <p class="text-sm font-semibold truncate">
         {{ profile?.username }}
       </p>
-      <p class="text-xs text-neutral-400 truncate">#{{ profile?.id }}</p>
+      <p class="text-xs text-stone-400 truncate">#{{ profile?.id }}</p>
     </div>
     <div class="ml-auto">
       <button
         type="button"
-        class="rounded-md size-8 text-neutral-400 hover:bg-neutral-700 p-1 hover:text-white"
+        class="rounded-md size-8 text-stone-400 hover:bg-stone-700 p-1 hover:text-white"
         (click)="menu.toggle($event)"
       >
         <i class="pi pi-cog"></i>

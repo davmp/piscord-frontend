@@ -35,26 +35,27 @@
     <p-skeleton
       width="100%"
       height="2.5rem"
-      class="rounded-md! bg-neutral-800!"
+      class="rounded-md! bg-stone-800!"
     />
     } @else if (rooms.length === 0) {
     <div
       class="h-[calc(100vh-20rem)] flex flex-col justify-center items-center p-4 gap-2"
     >
-      <i class="pi pi-comment text-neutral-700" style="font-size: 2rem"></i>
-      <p class="text-sm text-neutral-500 text-center">
+      <i class="pi pi-comment text-stone-700" style="font-size: 2rem"></i>
+      <p class="text-sm text-stone-500 text-center">
         Nenhuma sala encontrada.<br />Crie ou entre em uma sala!
       </p>
     </div>
     } @for(room of rooms; track room.id) {
     <div
-      class="w-full flex items-center justify-between gap-2 p-2 rounded-md hover:bg-neutral-700/50"
+      class="w-full flex items-center justify-between gap-2 p-2 rounded-md hover:bg-stone-700/50"
     >
       <div class="flex items-center gap-2 min-w-0">
         <p-avatar
-          [image]="room.picture ?? '/assets/user-placeholder.png'"
+          [image]="room.picture ?? '/assets/assets/piscord.svg'"
           shape="circle"
           styleClass="min-w-8! [&_img]:object-cover"
+          class="bg-lime-600!"
         />
         <div class="flex flex-col items-start -space-y-1">
           <span class="text-start text-nowrap truncate">{{
@@ -62,12 +63,12 @@
           }}</span>
           @if (room.max_members) {
           <span
-            class="text-xs text-neutral-400 text-start text-nowrap truncate"
+            class="text-xs text-stone-400 text-start text-nowrap truncate"
             >{{ room.member_count + "/" + room.max_members }}</span
           >
           } @else {
           <span
-            class="text-xs text-neutral-400 text-start text-nowrap truncate"
+            class="text-xs text-stone-400 text-start text-nowrap truncate"
             >{{ room.member_count + " membros" }}</span
           >
           }
@@ -77,7 +78,7 @@
       @if (room.is_member) {
       <p-button
         label="Abrir"
-        styleClass="ml-auto! h-8! p-2! rounded-sm! bg-neutral-800! hover:opacity-90"
+        styleClass="ml-auto! h-8! p-2! rounded-sm! bg-stone-800! hover:opacity-90"
         icon="pi pi-arrow-right"
         iconPos="right"
         [dt]="buttonThemes.ghost"

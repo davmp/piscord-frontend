@@ -22,11 +22,24 @@ export interface Message {
   type: MessageType | "system";
   is_own_message: boolean;
   file_url?: string;
-  reply_to?: string;
+  reply_to?: SelectedReplyMessage;
   is_edited: boolean;
   is_deleted: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface SelectedReplyMessage {
+  id: string;
+  user_id: string;
+  picture?: string;
+  username: string;
+  content: string;
+}
+
+export interface SelectedMessageEdit {
+  id: string;
+  content: string;
 }
 
 export interface DisplayMessage {
@@ -36,6 +49,8 @@ export interface DisplayMessage {
   username: string;
   picture?: string;
   file_url?: string;
+  reply_to?: SelectedReplyMessage;
+  is_edited: boolean;
   content: string;
   created_at: string;
   is_own_message: boolean;

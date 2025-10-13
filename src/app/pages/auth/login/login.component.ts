@@ -11,8 +11,8 @@ import { InputGroupModule } from "primeng/inputgroup";
 import { InputGroupAddonModule } from "primeng/inputgroupaddon";
 import { InputTextModule } from "primeng/inputtext";
 import { PasswordModule } from "primeng/password";
-import { AuthService } from "../../../services/auth/auth.service";
-import { buttonThemes, inputThemes } from "../../../themes/form.themes";
+import { AuthService } from "../../../services/user/auth/auth.service";
+import * as formThemes from "../../../themes/form.themes";
 
 @Component({
   selector: "app-login",
@@ -33,8 +33,8 @@ export class LoginComponent {
   private router = inject(Router);
   loginForm: FormGroup;
 
-  outlined = inputThemes.outlined;
-  ghost = buttonThemes.ghost;
+  inputThemes = formThemes.inputThemes;
+  buttonThemes = formThemes.buttonThemes;
 
   constructor() {
     this.loginForm = this.formBuilder.group({

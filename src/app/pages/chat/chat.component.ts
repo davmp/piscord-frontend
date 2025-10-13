@@ -18,7 +18,9 @@ import { Textarea } from "primeng/textarea";
 import { HeaderComponent } from "../../components/chat/header/header.component";
 import { MessageComponent } from "../../components/chat/message/message.component";
 import {
-  type DisplayMessage,
+  type Message,
+  type SelectedMessageEdit,
+  type SelectedReplyMessage,
   type WSResponse,
 } from "../../models/message.models";
 import { ChatService } from "../../services/chat/chat.service";
@@ -55,12 +57,13 @@ export class ChatComponent implements OnInit, OnDestroy {
   inputThemes = formThemes.inputThemes;
   popoverThemes = formThemes.menuThemes;
 
-  roomId: string | null = null;
   newMessageContent = "";
   newMessageFileUrl: string | null = null;
   tempFileUrl: string | null = null;
+  roomId: string | null = null;
+  newMessageReply: SelectedReplyMessage | null = null;
 
-  messages = signal<DisplayMessage[]>([]);
+  messages = signal<Message[]>([]);
   loadingMessages = false;
   page = 1;
   pageSize = 20;
@@ -88,7 +91,12 @@ export class ChatComponent implements OnInit, OnDestroy {
         currentDate.toDateString() !== previousDate.toDateString();
 
       let diffTime = true;
-      if (previousMessage && previousMessage.user_id === message.user_id) {
+      if (message.reply_to) {
+        diffTime = true;
+      } else if (
+        previousMessage &&
+        previousMessage.user_id === message.user_id
+      ) {
         const prevTime = new Date(previousMessage.created_at).getTime();
         const currTime = new Date(message.created_at).getTime();
 
@@ -97,6 +105,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         }
       }
 
+      message.content = message.content.trim();
       return { message, showDateSeparator, diffTime };
     });
   });
@@ -140,18 +149,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       .getMessages(roomId, this.page, this.pageSize)
       .subscribe({
         next: (result) => {
-          const messages = result.data.map((msg) => ({
-            id: msg.id,
-            room_id: msg.room_id,
-            user_id: msg.user_id,
-            username: msg.username,
-            picture: msg.picture,
-            content: msg.content,
-            file_url: msg.file_url,
-            created_at: msg.created_at,
-            is_own_message: msg.is_own_message,
-          }));
-          this.messages.set(messages);
+          this.messages.set(result.data);
         },
         error: () => {},
       });
@@ -175,8 +173,11 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   sendMessage(): void {
     if (this.newMessageContent.trim() && this.roomService.selectedRoom()) {
+      const replyMessageId = this.newMessageReply?.id ?? null;
+
       const err = this.chatService.sendMessage(
         this.newMessageContent,
+        replyMessageId,
         this.newMessageFileUrl
       );
       if (err) {
@@ -185,7 +186,28 @@ export class ChatComponent implements OnInit, OnDestroy {
       }
       this.newMessageContent = "";
       this.newMessageFileUrl = null;
+      this.newMessageReply = null;
       this.tempFileUrl = null;
+    }
+  }
+
+  editMessage(data: SelectedMessageEdit): void {
+    if (data.content.trim() && this.roomService.selectedRoom()) {
+      const err = this.chatService.editMessage(data.id, data.content);
+      if (err) {
+        console.error("Error sending message: ", err);
+        return;
+      }
+
+      this.messages.set(
+        this.messages().map((message) => {
+          if (data.id === message.id) {
+            message.content = data.content;
+            message.is_edited = true;
+          }
+          return message;
+        })
+      );
     }
   }
 

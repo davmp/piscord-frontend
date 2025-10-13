@@ -1,58 +1,188 @@
 <div
-  class="px-6 py-0.5 grid grid-cols-[40px_1fr] h-fit items-start gap-4 hover:bg-neutral-700/30 relative group/message"
+  class="mr-2 rounded-r-md px-6 py-0.5 h-fit border-l-2 border-l-transparent hover:bg-stone-700/30 relative group/message {{
+    isSelected() && 'bg-lime-700/25 hover:bg-lime-700/20! border-l-lime-600!'
+  }}"
   [style]="{
     'margin-top': diffTime() ? '12px' : '0',
   }"
+  (blur)="
+    $event.preventDefault();
+    isEditingMessage = false;
+    newMessageContent = message()?.content || ''
+  "
 >
-  <div
-    class="col-start-1 col-end-2 h-full max-h-16 flex-shrink-0 flex items-center justify-center"
-    [class]="{ 'items-start': !diffTime() }"
-  >
-    @if (diffTime()) {
-    <p-avatar
-      [image]="message()?.picture || '/assets/user-placeholder.png'"
-      shape="circle"
-      styleClass="size-10! [&_img]:object-cover"
-    ></p-avatar>
-    } @else {
+  @if (message()?.reply_to) {
+  <div class="flex items-center gap-1 ml-5 mb-2 text-stone-400">
+    <i class="pi pi-reply mr-2"></i>
+    <div class="flex items-center gap-1">
+      <p-avatar
+        [image]="message()?.reply_to?.picture || '/assets/assets/piscord.svg'"
+        shape="circle"
+        styleClass="size-4! [&_img]:object-cover"
+        class="bg-stone-700!"
+        #picture
+      ></p-avatar>
+      <span class="text-xs text-stone-400 font-medium text-nowrap">{{
+        message()?.reply_to?.username
+      }}</span>
+    </div>
     <span
-      class="mt-1 hidden group-hover/message:block text-[11px] text-nowrap truncate text-neutral-500"
+      class="text-xs text-stone-300 font-normal text-nowrap line-clamp-1 truncate"
+      >{{ message()?.reply_to?.content }}</span
     >
-      {{ formattedDate }}
-    </span>
-    }
   </div>
-  <div class="col-start-2 col-end-3">
+  }
+  <div class="grid grid-cols-[40px_1fr] gap-4 items-start">
     @if (diffTime()) {
-    <div class="flex items-center space-x-2">
-      <span class="font-medium text-neutral-200">
-        {{ message()?.username }}
-      </span>
-      <span class="text-xs text-neutral-500">
-        {{ formattedFullDate }}
-      </span>
-    </div>
-    }
-    <p
-      class="font-normal text-neutral-300 break-words break-all whitespace-pre-wrap hyphens-auto"
+    <div
+      class="col-start-1 col-end-2 h-full max-h-16 flex-shrink-0 flex items-center justify-center"
     >
-      {{ message()?.content }}
-    </p>
+      <p-avatar
+        [image]="message()?.picture || '/assets/assets/piscord.svg'"
+        shape="circle"
+        styleClass="size-10! [&_img]:object-cover"
+        class="bg-stone-700!"
+        #picture
+      ></p-avatar>
+    </div>
+    <div class="col-start-2 col-end-3">
+      <div class="flex items-center space-x-2">
+        <span
+          class="font-medium text-stone-200 hover:underline cursor-pointer"
+          (click)="ui.toggle($event); showUserPopup()"
+        >
+          {{ message()?.username }}
+        </span>
+        <span class="text-xs text-stone-500">
+          {{ formattedFullDate }}
+        </span>
+        <p-popover #ui [dt]="menuThemes.ghost">
+          <div class="w-full flex items-center space-x-2">
+            <div>
+              <div class="relative size-10">
+                <p-avatar
+                  [image]="userInfo?.picture ?? '/assets/assets/piscord.svg'"
+                  shape="circle"
+                  class="size-full! [&_img]:object-cover bg-stone-700!"
+                />
+                <span
+                  class="absolute -bottom-0 -right-0 size-4 bg-green-500 border-3 border-stone-700 rounded-full"
+                ></span>
+              </div>
+            </div>
+            <div class="flex-1 overflow-hidden text-ellipsis space-y-1">
+              <p class="text-xl font-semibold text-stone-100 truncate">
+                {{ userInfo?.username }}
+              </p>
+              <p class="text-xs text-stone-400 truncate">#{{ userInfo?.id }}</p>
+            </div>
+          </div>
 
-    @if (message()?.file_url) {
-    <div class="pb-1">
-      <img [src]="message()?.file_url" class="object-contain max-h-32" />
+          <div class="space-y-4">
+            @if (userInfo?.bio) {
+            <div
+              class="bg-stone-700 w-full flex flex-col rounded-2xl px-4 py-3"
+            >
+              <span class="font-medium">Bio</span>
+              <p
+                class="text-sm font-normal text-stone-300 break-words break-all whitespace-pre-wrap hyphens-auto"
+              >
+                {{ userInfo?.bio }}
+              </p>
+            </div>
+            }
+          </div>
+        </p-popover>
+      </div>
+      @if (isEditingMessage) {
+      <textarea
+        pTextarea
+        rows="1"
+        [maxlength]="500"
+        fluid
+        [autoResize]="true"
+        [autofocus]="true"
+        [defaultValue]="newMessageContent"
+        [(ngModel)]="newMessageContent"
+        [dt]="inputThemes.outlined"
+        (blur)="
+          isEditingMessage = false; newMessageContent = message()?.content || ''
+        "
+        (keydown.escape)="
+          $event.preventDefault();
+          isEditingMessage = false;
+          newMessageContent = message()?.content || ''
+        "
+        (keydown.enter)="
+          $event.preventDefault(); isEditingMessage = false; handleEditMessage()
+        "
+        class="flex-1!"
+      ></textarea>
+      } @else {
+      <p
+        class="w-fit font-normal text-stone-300 break-words break-all whitespace-pre-wrap hyphens-auto"
+      >
+        {{ message()?.content }}
+        @if (message()?.is_edited) {
+        <span class="text-xs text-neutral-400">(editado)</span>
+        }
+      </p>
+      } @if (message()?.file_url) {
+      <div class="pb-1">
+        <img [src]="message()?.file_url" class="object-contain max-h-32" />
+      </div>
+      }
+    </div>
+    } @else {
+    <div
+      class="col-start-1 col-end-2 h-full max-h-16 flex-shrink-0 flex items-start justify-center"
+    >
+      <span
+        class="mt-1 hidden group-hover/message:block text-[11px] text-nowrap truncate text-stone-500"
+      >
+        {{ formattedDate }}
+      </span>
+    </div>
+    <div class="col-start-2 col-end-3">
+      <p
+        class="w-fit font-normal text-stone-300 break-words break-all whitespace-pre-wrap hyphens-auto"
+      >
+        {{ message()?.content }}
+      </p>
+
+      @if (message()?.file_url) {
+      <div class="pb-1">
+        <img [src]="message()?.file_url" class="object-contain max-h-32" />
+      </div>
+      }
     </div>
     }
-  </div>
-  <div
-    class="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover/message:opacity-100 transition-opacity"
-  >
-    <button
-      pButton
+
+    <div
+      class="absolute right-4 -top-4 opacity-0 group-hover/message:opacity-100 rounded-md w-fit p-[2px] bg-stone-800 border border-stone-700 text-stone-500 hover:border-stone-600 flex items-center z-20"
+    >
+      @if (message()?.is_own_message) {
+      <button
+        type="button"
+        class="size-7 p-1 rounded-md hover:bg-stone-700/40 hover:text-stone-300 grid place-content-center"
+        (click)="isEditingMessage = true"
+      >
+        <i class="pi pi-pencil"></i>
+      </button>
+      }
+      <button
+        type="button"
+        class="size-7 p-1 rounded-md shadow-sm hover:bg-stone-700/40 hover:text-stone-300 grid place-content-center"
+        (click)="handleReplyMessage()"
+      >
+        <i class="pi pi-reply -scale-x-100"></i>
+      </button>
+      <!-- <button
       type="button"
-      icon="pi pi-ellipsis-v"
-      class="p-button-text p-button-rounded p-button-sm text-neutral-500 hover:text-neutral-300"
-    ></button>
+      class="size-7 p-1 rounded-md hover:bg-stone-700/40 hover:text-stone-300 grid place-content-center"
+    >
+      <i class="pi pi-ellipsis-h"></i>
+    </button> -->
+    </div>
   </div>
 </div>

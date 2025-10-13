@@ -1,7 +1,7 @@
 import { inject, Injectable } from "@angular/core";
 import { Observable } from "rxjs";
 import { webSocket, WebSocketSubject } from "rxjs/webSocket";
-import { AuthService } from "../auth/auth.service";
+import { AuthService } from "../user/auth/auth.service";
 
 @Injectable({
   providedIn: "root",

@@ -5,9 +5,12 @@ import type {
   AuthResponse,
   LoginRequest,
   RegisterRequest,
-} from "../../models/auth.models";
-import type { Profile, UpdateProfileRequest } from "../../models/user.models";
-import { DeviceService } from "../device.service";
+} from "../../../models/auth.models";
+import type {
+  Profile,
+  UpdateProfileRequest,
+} from "../../../models/user.models";
+import { DeviceService } from "../../device.service";
 
 @Injectable({
   providedIn: "root",
