@@ -13,6 +13,13 @@ export const routes: Routes = [
           import("./pages/chat/chat.component").then((m) => m.ChatComponent),
       },
       {
+        path: "friends",
+        loadComponent: () =>
+          import("./pages/friends/friends.component").then(
+            (m) => m.FriendsComponent
+          ),
+      },
+      {
         path: "settings",
         loadComponent: () =>
           import("./pages/settings/settings.component").then(

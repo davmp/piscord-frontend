@@ -19,7 +19,10 @@
         [dt]="buttonThemes.ghost"
         fluid
         icon="pi pi-users"
-        styleClass="justify-start! transition-none!"
+        styleClass="justify-start! transition-none! {{
+          endsWithPathname('/friends') && 'bg-neutral-800! text-white!'
+        }}"
+        routerLink="/friends"
       >
       </p-button>
       <p-button
@@ -29,7 +32,9 @@
         icon="pi pi-bell"
         [badge]="unreadNotificationCount"
         badgeSeverity="danger"
-        styleClass="justify-start! transition-none!"
+        styleClass="justify-start! transition-none! {{
+          endsWithPathname('/notifications') && 'bg-neutral-800! text-white!'
+        }}"
         routerLink="/notifications"
       >
       </p-button>
@@ -38,7 +43,9 @@
         [dt]="buttonThemes.ghost"
         fluid
         icon="pi pi-cog"
-        styleClass="justify-start! transition-none!"
+        styleClass="justify-start! transition-none! {{
+          endsWithPathname('/settings') && 'bg-neutral-800! text-white!'
+        }}"
         routerLink="/settings"
       >
       </p-button>

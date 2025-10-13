@@ -1,4 +1,4 @@
-import { Component, inject, signal } from "@angular/core";
+import { Component, inject } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
 import { Avatar } from "primeng/avatar";
 import type { Notification } from "../../models/notification.models";
@@ -14,7 +14,7 @@ export class NotificationsComponent {
   private router = inject(Router);
   private notificationService = inject(NotificationService);
 
-  isLoading = signal(false);
+  isLoading = false;
   notifications: Notification[] = [];
 
   buttonThemes = formThemes.buttonThemes;
@@ -31,14 +31,14 @@ export class NotificationsComponent {
   }
 
   loadNotifications() {
-    this.isLoading.set(true);
+    this.isLoading = true;
 
     this.notificationService.getMyNotifications().subscribe((res) => {
       const notifications = res.data as Notification[];
       this.notifications = notifications;
     });
 
-    this.isLoading.set(false);
+    this.isLoading = false;
   }
 
   handleClickNotification(notification: Notification) {

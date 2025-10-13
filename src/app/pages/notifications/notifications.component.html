@@ -21,7 +21,7 @@
 
   <div class="relative space-y-2 overflow-y-scroll h-full hide-scrollbar pb-2">
     <ul class="flex flex-col sm:gap-1 sm:p-2">
-      @if (isLoading()) {
+      @if (isLoading) {
       <div>carregando...</div>
       } @else if (notifications.length === 0) {
       <div
