@@ -13,13 +13,6 @@ export const routes: Routes = [
           import("./pages/chat/chat.component").then((m) => m.ChatComponent),
       },
       {
-        path: "friends",
-        loadComponent: () =>
-          import("./pages/friends/friends.component").then(
-            (m) => m.FriendsComponent
-          ),
-      },
-      {
         path: "settings",
         loadComponent: () =>
           import("./pages/settings/settings.component").then(
@@ -37,6 +30,13 @@ export const routes: Routes = [
         path: "chat/:roomId",
         loadComponent: () =>
           import("./pages/chat/chat.component").then((m) => m.ChatComponent),
+      },
+      {
+        path: "chat/user/:userId",
+        loadComponent: () =>
+          import("./pages/chat/user/user.component").then(
+            (m) => m.ChatUserComponent
+          ),
       },
     ],
     canActivate: [AuthGuardService],

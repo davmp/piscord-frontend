@@ -1,14 +1,16 @@
 import {
   Component,
   computed,
-  effect,
   inject,
   signal,
+  ViewChild,
+  type ElementRef,
   type OnDestroy,
   type OnInit,
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
+import { AutoFocus } from "primeng/autofocus";
 import { Button } from "primeng/button";
 import { InputGroup } from "primeng/inputgroup";
 import { InputGroupAddon } from "primeng/inputgroupaddon";
@@ -41,6 +43,7 @@ import * as formThemes from "../../themes/form.themes";
     Popover,
     InputGroup,
     InputGroupAddon,
+    AutoFocus,
     FormsModule,
   ],
   templateUrl: "./chat.component.html",
@@ -53,20 +56,20 @@ export class ChatComponent implements OnInit, OnDestroy {
   private messageService = inject(MessageService);
   private deviceService = inject(DeviceService);
 
-  buttonThemes = formThemes.buttonThemes;
-  inputThemes = formThemes.inputThemes;
-  popoverThemes = formThemes.menuThemes;
-
-  newMessageContent = "";
-  newMessageFileUrl: string | null = null;
-  tempFileUrl: string | null = null;
-  roomId: string | null = null;
-  newMessageReply: SelectedReplyMessage | null = null;
-
+  newMessageContent = signal("");
+  newMessageFileUrl = signal(null as string | null);
+  tempFileUrl = signal(null as string | null);
+  newMessageReply = signal(null as SelectedReplyMessage | null);
   messages = signal<Message[]>([]);
-  loadingMessages = false;
-  page = 1;
-  pageSize = 20;
+  loadingMessages = signal(false);
+
+  readonly page = 1;
+  readonly pageSize = 20;
+  readonly buttonThemes = formThemes.buttonThemes;
+  readonly inputThemes = formThemes.inputThemes;
+  readonly popoverThemes = formThemes.menuThemes;
+
+  @ViewChild("message") messageTextarea!: ElementRef<HTMLTextAreaElement>;
 
   inputPlaceholder = computed(() => {
     if (this.roomService.selectedRoom()) {
@@ -76,6 +79,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     }
     return "Selecione uma sala para começar a conversar";
   });
+
+  isSendDisabled = computed(
+    () => !this.newMessageContent().trim() && !this.newMessageFileUrl()
+  );
 
   messagesDisplay = computed(() => {
     return this.messages().map((message, index) => {
@@ -112,20 +119,14 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.route.paramMap.subscribe((params) => {
-      this.roomId = params.get("roomId");
-      if (!this.roomId) {
-        this.chatService.exitRoom();
-      } else if (
-        !this.roomService.selectedRoom() ||
-        this.roomId !== this.roomService.selectedRoom()?.id
-      ) {
-        this.chatService.selectRoomId(this.roomId);
-      }
-    });
+      const roomId = params.get("roomId");
 
-    effect(() => {
-      this.chatService.roomChanged();
-      this.fetchMessages();
+      if (roomId) {
+        this.chatService.selectRoomId(roomId);
+        this.fetchMessages(roomId);
+      } else {
+        this.chatService.exitRoom();
+      }
     });
   }
 
@@ -138,12 +139,10 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.chatService.exitRoom();
   }
 
-  fetchMessages() {
-    const roomId = this.roomService.selectedRoom()?.id;
-
+  fetchMessages(roomId: string) {
     if (!roomId) return;
 
-    this.loadingMessages = true;
+    this.loadingMessages.set(true);
 
     this.messageService
       .getMessages(roomId, this.page, this.pageSize)
@@ -154,7 +153,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         error: () => {},
       });
 
-    this.loadingMessages = false;
+    this.loadingMessages.set(false);
   }
 
   subscribeToMessages(): void {
@@ -172,26 +171,26 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   sendMessage(): void {
-    if (this.newMessageContent.trim() && this.roomService.selectedRoom()) {
-      const replyMessageId = this.newMessageReply?.id ?? null;
+    if (this.newMessageContent().trim() && this.roomService.selectedRoom()) {
+      const replyMessageId = this.newMessageReply()?.id ?? null;
 
       const err = this.chatService.sendMessage(
-        this.newMessageContent,
+        this.newMessageContent(),
         replyMessageId,
-        this.newMessageFileUrl
+        this.newMessageFileUrl()
       );
       if (err) {
         console.error("Error sending message: ", err);
         return;
       }
-      this.newMessageContent = "";
-      this.newMessageFileUrl = null;
-      this.newMessageReply = null;
-      this.tempFileUrl = null;
+      this.newMessageContent.set("");
+      this.newMessageFileUrl.set(null);
+      this.newMessageReply.set(null);
+      this.tempFileUrl.set(null);
     }
   }
 
-  editMessage(data: SelectedMessageEdit): void {
+  onEditMessage(data: SelectedMessageEdit): void {
     if (data.content.trim() && this.roomService.selectedRoom()) {
       const err = this.chatService.editMessage(data.id, data.content);
       if (err) {
@@ -209,6 +208,14 @@ export class ChatComponent implements OnInit, OnDestroy {
         })
       );
     }
+  }
+
+  onReplySelected(reply: SelectedReplyMessage): void {
+    this.newMessageReply.set(reply);
+
+    setTimeout(() => {
+      this.messageTextarea?.nativeElement.focus();
+    }, 0);
   }
 
   isMobile() {

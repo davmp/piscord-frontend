@@ -1,45 +1,58 @@
 <div class="w-full h-screen flex flex-col bg-stone-800">
-  <app-header></app-header>
+  <div
+    class="w-full h-[57px] bg-stone-800 border-b flex items-center border-stone-700/80 px-4"
+  >
+    <div class="h-full flex items-center space-x-2">
+      @if (isMobile()) {
+      <span styleClass="size-8 cursor-pointer group/button" routerLink="/">
+        <i
+          class="pi pi-arrow-left text-stone-400 group-hover/button:text-stone-100! grid place-content-center"
+        ></i>
+      </span>
+      }
+      <div class="h-full flex items-center">
+        <p-avatar
+          [image]="user()?.picture ?? '/assets/piscord.svg'"
+          shape="circle"
+          class="[&_img]:object-cover bg-lime-600!"
+        />
+      </div>
+      @if (user()) {
+      <button
+        class="flex flex-col -space-y-1 cursor-pointer"
+        (click)="$event.stopPropagation()"
+      >
+        <span class="text-white text-md">
+          {{ user()?.username }}
+        </span>
+      </button>
+      } @else {
+      <div class="flex flex-col -space-y-1">
+        <span class="text-white text-md">Chat</span>
+      </div>
+      }
+    </div>
+
+    <div class="ml-auto flex items-center space-x-2">
+      <p-button
+        icon="pi pi-user-plus"
+        [dt]="buttonThemes.ghost"
+        styleClass="size-8! bg-stone-800! hover:bg-stone-700/50! transition-colors!"
+      >
+      </p-button>
+    </div>
+  </div>
 
   <section
     class="relative w-full h-full overflow-y-scroll flex flex-col-reverse hide-scrollbar"
   >
     <ul class="flex flex-col-reverse w-full pb-4">
-      @if (messagesDisplay().length === 0 && !loadingMessages()) {
       <div
         class="absolute inset-0 flex flex-col items-center justify-center text-center text-stone-400 p-4"
       >
         <i class="pi pi-inbox mb-2 text-4xl! text-stone-600"></i>
         Nenhuma mensagem ainda. Seja o primeiro a enviar uma!
       </div>
-      } @else if (loadingMessages()) {
-      <div
-        class="absolute inset-0 flex items-center justify-center text-stone-400"
-      >
-        <i class="pi pi-spin pi-spinner text-4xl!"></i>
-      </div>
-      } @for (display of messagesDisplay(); track display.message.id) {
-      <li>
-        @if (display.showDateSeparator) {
-        <div
-          class="w-full text-sm flex items-center px-4 gap-2 text-stone-400 [&_hr]:w-full [&_hr]:border-t [&_hr]:border-t-neutral-700"
-        >
-          <hr />
-          {{ dateSeparator(display.message.created_at) }}
-          <hr />
-        </div>
-        }
-        <app-message
-          [message]="display.message"
-          [diffTime]="display.diffTime"
-          [isSelected]="
-            !!newMessageReply && newMessageReply()?.id === display.message.id
-          "
-          (onEditMessage)="onEditMessage($event)"
-          (onSelectReplyMessage)="onReplySelected($event)"
-        ></app-message>
-      </li>
-      }
     </ul>
   </section>
 
@@ -55,7 +68,7 @@
         rows="1"
         [maxlength]="500"
         fluid
-        [placeholder]="inputPlaceholder()"
+        [placeholder]="inputPlaceholder"
         [autoResize]="true"
         [pAutoFocus]="true"
         [(ngModel)]="newMessageContent"
@@ -74,25 +87,8 @@
   </div>
   } @else {
   <div class="w-full p-2">
-    @if (newMessageReply()) {
     <div
-      class="bg-stone-600/40 border border-stone-700/50 border-b-0 rounded-t-lg text-stone-300 w-full flex items-center justify-between px-4 py-2"
-    >
-      <span class="text-sm">
-        Respondendo a <b>{{ newMessageReply()?.username }}</b>
-      </span>
-      <button
-        class="size-4 grid place-content-center text-stone-400 hover:text-stone-200"
-        (click)="newMessageReply.set(null)"
-      >
-        <i class="pi pi-times text-sm!"></i>
-      </button>
-    </div>
-    }
-    <div
-      class="w-full flex items-start bg-stone-600/20 border border-stone-700 min-h-14 rounded-lg pt-1.5 pl-2 {{
-        newMessageReply() && 'rounded-t-none!'
-      }}"
+      class="w-full flex items-start bg-stone-600/20 border border-stone-700 min-h-14 rounded-lg pt-1.5 pl-2"
     >
       <p-button
         icon="pi pi-plus"
@@ -149,7 +145,7 @@
         rows="1"
         [maxlength]="500"
         fluid
-        [placeholder]="inputPlaceholder()"
+        [placeholder]="inputPlaceholder"
         [pAutoFocus]="true"
         [autoResize]="true"
         [(ngModel)]="newMessageContent"

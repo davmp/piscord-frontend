@@ -1,6 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { Subject } from "rxjs";
+import type { Message } from "../../models/message.models";
 import type {
   Notification,
   NotificationsResponse,
@@ -16,6 +17,7 @@ export class NotificationService {
   private wsService = inject(WebsocketService);
   private http = inject(HttpClient);
 
+  messageSubscription: Subject<Message> = new Subject();
   notificationSubscription: Subject<Notification | null> = new Subject();
 
   constructor() {
@@ -25,8 +27,15 @@ export class NotificationService {
   private subscribeToNotifications(): void {
     this.wsService.connection().subscribe({
       next: (message) => {
-        if (message.type === "notification" && message.data) {
+        if (!message.data) {
+          return;
+        }
+
+        if (message.type === "notification") {
           this.notificationSubscription.next(message);
+        }
+        if (message.type === "message_notification") {
+          this.messageSubscription.next(message.data);
         }
       },
     });

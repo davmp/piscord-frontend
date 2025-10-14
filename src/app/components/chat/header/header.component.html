@@ -17,27 +17,18 @@
       />
     </div>
     @if (selectedRoom()) {
-    <div class="flex flex-col -space-y-1">
+    <button
+      class="flex flex-col -space-y-1 cursor-pointer"
+      (click)="$event.stopPropagation()"
+    >
       <span class="text-white text-md">
         {{ selectedRoom()?.display_name }}
       </span>
-      <span class="text-stone-400 text-sm">
-        {{ selectedRoom()?.member_count + " Membros" }}
-      </span>
-    </div>
+    </button>
     } @else {
     <div class="flex flex-col -space-y-1">
       <span class="text-white text-md">Chat</span>
     </div>
     }
-  </div>
-
-  <div class="ml-auto flex items-center space-x-2">
-    <p-button
-      icon="pi pi-user-plus"
-      [dt]="ghost"
-      styleClass="size-8! bg-stone-800! hover:bg-stone-700/50! transition-colors!"
-    >
-    </p-button>
   </div>
 </div>

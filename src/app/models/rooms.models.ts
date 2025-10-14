@@ -1,3 +1,5 @@
+import type { MessagePreviewResponse } from "./message.models";
+
 export interface GetRooms<T = Room> {
   data: T[];
   total: number;
@@ -13,6 +15,7 @@ export interface Room {
   member_count: number;
   is_member: boolean;
   is_admin: boolean;
+  last_message?: MessagePreviewResponse;
   owner_id: string;
 }
 
@@ -30,7 +33,10 @@ export interface PublicRoom {
 }
 
 export interface CreateRoomRequest {
-  name: string;
+  name?: string;
   description?: string;
   picture?: string;
+  type: "public" | "private" | "direct";
+  max_members: number;
+  participant_ids: string[];
 }

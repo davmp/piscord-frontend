@@ -1,4 +1,11 @@
-import { Component, computed, effect, inject, output } from "@angular/core";
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  output,
+  signal,
+} from "@angular/core";
 import { RouterLink } from "@angular/router";
 import { AvatarModule } from "primeng/avatar";
 import { ButtonModule } from "primeng/button";
@@ -28,14 +35,14 @@ export class SidebarComponent {
   private notificationService = inject(NotificationService);
   private deviceService = inject(DeviceService);
 
-  isLoading = false;
-  unreadNotificationCount: string | undefined = undefined;
-  rooms: Room[] = [];
+  isLoading = signal(false);
+  unreadNotificationCount = signal(undefined as string | undefined);
+  rooms = signal([] as Room[]);
 
-  selectedRoom = computed(() => this.roomService.selectedRoom());
   openModal = output<"createRoom" | "findRooms">();
+  selectedRoom = computed(() => this.roomService.selectedRoom());
 
-  buttonThemes = formThemes.buttonThemes;
+  readonly buttonThemes = formThemes.buttonThemes;
 
   constructor() {
     this.loadRooms();
@@ -45,6 +52,31 @@ export class SidebarComponent {
       this.loadNotificationCount();
     });
 
+    this.notificationService.messageSubscription.subscribe((message) => {
+      const rooms = this.rooms();
+      const updatedRooms = rooms.map((room) =>
+        room.id === message.room_id
+          ? {
+              ...room,
+              last_message: {
+                id: message.id,
+                room_id: message.room_id,
+                username: message.username,
+                content: message.content,
+                created_at: message.created_at,
+              },
+            }
+          : room
+      );
+
+      const updatedRoom = updatedRooms.find((r) => r.id === message.room_id);
+      const sortedRooms = updatedRoom
+        ? [updatedRoom, ...updatedRooms.filter((r) => r.id !== message.room_id)]
+        : updatedRooms;
+
+      this.rooms.set(sortedRooms);
+    });
+
     effect(() => {
       this.chatService.roomChanged();
       this.loadRooms();
@@ -52,18 +84,18 @@ export class SidebarComponent {
   }
 
   loadRooms() {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.roomService.getMyRooms().subscribe((rooms) => {
-      this.rooms = rooms.data;
+      this.rooms.set(rooms.data);
     });
-    this.isLoading = false;
+    this.isLoading.set(false);
   }
 
   loadNotificationCount() {
     this.notificationService.getUnreadNotificationCount().subscribe((count) => {
       if (count) {
         const showCount = count >= 100 ? "99+" : count.toString();
-        this.unreadNotificationCount = showCount;
+        this.unreadNotificationCount.set(showCount);
       }
     });
   }
@@ -78,5 +110,26 @@ export class SidebarComponent {
 
   endsWithPathname(path: string) {
     return this.deviceService.endsWithPathname(path);
+  }
+
+  formattedDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+    if (diffDays < 1) {
+      return date.toLocaleTimeString(["pt-BR"], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+    } else {
+      return date.toLocaleDateString(["pt-BR"], {
+        day: "2-digit",
+        month: "short",
+        year: "2-digit",
+      });
+    }
   }
 }

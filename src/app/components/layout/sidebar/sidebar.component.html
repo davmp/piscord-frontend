@@ -15,22 +15,11 @@
     <hr class="border-t border-stone-700/80" />
     <ul class="flex flex-col gap-y-0.5 px-2">
       <p-button
-        label="Amigos"
-        [dt]="buttonThemes.ghost"
-        fluid
-        icon="pi pi-users"
-        styleClass="justify-start! transition-none! {{
-          endsWithPathname('/friends') && 'bg-stone-800! text-white!'
-        }}"
-        routerLink="/friends"
-      >
-      </p-button>
-      <p-button
         label="Atividade"
         [dt]="buttonThemes.ghost"
         fluid
         icon="pi pi-bell"
-        [badge]="unreadNotificationCount"
+        [badge]="unreadNotificationCount()"
         badgeSeverity="danger"
         styleClass="justify-start! transition-none! {{
           endsWithPathname('/notifications') && 'bg-stone-800! text-white!'
@@ -52,13 +41,13 @@
     </ul>
     <hr class="border-t border-stone-700/80" />
     <ul class="flex flex-col gap-y-0.5 px-2">
-      @if (isLoading) {
+      @if (isLoading()) {
       <p-skeleton
         width="100%"
         height="2.5rem"
         class="rounded-md! bg-stone-800!"
       />
-      } @else if (rooms.length === 0) {
+      } @else if (rooms().length === 0) {
       <div
         class="h-[calc(100vh-20rem)] flex flex-col justify-center items-center p-4 gap-2"
       >
@@ -67,11 +56,11 @@
           Nenhuma sala encontrada.<br />Crie ou entre em uma sala!
         </p>
       </div>
-      } @for(room of rooms; track room.id) {
+      } @for(room of rooms(); track room.id) {
       <p-button
         fluid
-        styleClass="justify-start! transition-none! {{
-          room.id === selectedRoom()?.id && 'bg-stone-800! text-white!'
+        styleClass="justify-start! transition-none! hover:text-stone-300! {{
+          room.id === selectedRoom()?.id && 'bg-stone-800! text-stone-200!'
         }}"
         routerLink="/chat/{{ room.id }}"
         [dt]="buttonThemes.ghost"
@@ -81,9 +70,25 @@
           shape="circle"
           styleClass="min-w-8! [&_img]:object-cover bg-lime-600!"
         />
-        <span class="text-start text-nowrap truncate">{{
-          room.display_name
-        }}</span>
+        <div class="flex-1 overflow-x-hidden flex flex-col -space-y-1">
+          <div class="flex-1 flex items-start justify-between">
+            <span class="flex-1 text-start text-nowrap truncate">
+              {{ room.display_name }}
+            </span>
+            @if (room.last_message) {<span
+              class="min-w-fit text-[10px] text-neutral-500"
+              >{{ formattedDate(room.last_message.created_at) }}</span
+            >}
+          </div>
+          @if (room.last_message) {
+          <span
+            class="w-full inline-block text-sm text-stone-500 font-normal text-start text-nowrap truncate"
+          >
+            {{ room.last_message.username }}:
+            {{ room.last_message.content }}</span
+          >
+          }
+        </div>
       </p-button>
       }
     </ul>

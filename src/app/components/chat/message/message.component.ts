@@ -1,6 +1,16 @@
-import { Component, effect, inject, input, output } from "@angular/core";
+import {
+  Component,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
+import { RouterLink } from "@angular/router";
+import { AutoFocus } from "primeng/autofocus";
 import { Avatar } from "primeng/avatar";
+import { Button } from "primeng/button";
 import { Popover } from "primeng/popover";
 import { Textarea } from "primeng/textarea";
 import {
@@ -14,7 +24,15 @@ import * as formThemes from "../../../themes/form.themes";
 
 @Component({
   selector: "app-message",
-  imports: [Avatar, Popover, Textarea, FormsModule],
+  imports: [
+    Avatar,
+    Popover,
+    Textarea,
+    Button,
+    AutoFocus,
+    FormsModule,
+    RouterLink,
+  ],
   templateUrl: "./message.component.html",
 })
 export class MessageComponent {
@@ -27,33 +45,34 @@ export class MessageComponent {
   onEditMessage = output<SelectedMessageEdit>();
   onSelectReplyMessage = output<SelectedReplyMessage>();
 
-  newMessageContent = "";
-  isEditingMessage = false;
-  userInfo: Profile | null = null;
-  userInfoLoading = false;
-  userPopupError: string | null = null;
+  newMessageContent = signal("");
+  isEditingMessage = signal(false);
+  userInfo = signal<Profile | null>(null);
+  userInfoLoading = signal(false);
+  userPopupError = signal(null as string | null);
 
-  menuThemes = formThemes.menuThemes;
-  inputThemes = formThemes.inputThemes;
+  readonly menuThemes = formThemes.menuThemes;
+  readonly inputThemes = formThemes.inputThemes;
+  readonly buttonThemes = formThemes.buttonThemes;
 
   constructor() {
     effect(() => {
-      this.newMessageContent = this.message()?.content || "";
+      this.newMessageContent.set(this.message()?.content || "");
     });
   }
 
   showUserPopup() {
-    this.userInfoLoading = true;
-    this.userInfo = null;
-    this.userPopupError = null;
+    this.userInfoLoading.set(true);
+    this.userInfo.set(null);
+    this.userPopupError.set(null);
     const id = this.message()?.user_id;
     if (id) {
       this.userService.getProfileById(id).subscribe({
-        next: (profile) => (this.userInfo = profile),
-        error: () => (this.userPopupError = "Erro ao carregar usuário."),
+        next: (profile) => this.userInfo.set(profile),
+        error: () => this.userPopupError.set("Erro ao carregar usuário."),
       });
     }
-    this.userInfoLoading = false;
+    this.userInfoLoading.set(false);
   }
 
   handleReplyMessage() {
@@ -70,6 +89,10 @@ export class MessageComponent {
     });
   }
 
+  editMessage() {
+    this.isEditingMessage.set(true);
+  }
+
   handleEditMessage() {
     const message = this.message();
 
@@ -77,7 +100,7 @@ export class MessageComponent {
 
     this.onEditMessage.emit({
       id: message.id,
-      content: this.newMessageContent,
+      content: this.newMessageContent(),
     });
   }
 

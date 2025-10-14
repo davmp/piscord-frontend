@@ -54,6 +54,19 @@ export class RoomService {
     );
   }
 
+  getDirectRoom(userId: string): Observable<Room> {
+    return this.http.get<Room>(`${this.roomsApiUrl}/direct/${userId}`).pipe(
+      shareReplay(),
+      catchError((error) => {
+        console.error(
+          `Error fetching direct room with user ID ${userId}:`,
+          error
+        );
+        throw error;
+      })
+    );
+  }
+
   createRoom(data: CreateRoomRequest): Observable<Room> {
     return this.http.post<Room>(this.roomsApiUrl, data).pipe(
       catchError((error) => {

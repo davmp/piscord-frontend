@@ -104,20 +104,33 @@ export class ChatService {
     return null;
   }
 
+  selectedDirectRoomId(userId: string) {
+    return this.roomService.getDirectRoom(userId).pipe(
+      tap((room) => {
+        if (!room) return;
+
+        this.roomService.selectRoom(room);
+        this.typingUsers = [];
+
+        this.wsService.sendMessage({
+          type: "connection",
+          payload: { action: "enter_room", room_id: room.id },
+        });
+      })
+    );
+  }
+
   createRoom(data: CreateRoomRequest) {
-    const obs = this.roomService.createRoom(data);
-
-    obs.subscribe({
-      next: (room) => {
-        this.roomChanged.update((n) => n + 1);
-        this.selectRoom(room);
-      },
-      error: (error) => {
-        console.error("Error creating room:", error);
-      },
-    });
-
-    return obs;
+    return this.roomService.createRoom(data).pipe(
+      tap((data) => {
+        if (data) {
+          this.roomChanged.update((n) => n + 1);
+          this.selectRoom(data);
+        } else {
+          console.error("Error creating room:", data);
+        }
+      })
+    );
   }
 
   joinRoom(newRoomId: string): Observable<Room> | null {
@@ -175,6 +188,8 @@ export class ChatService {
     if (!roomId || !this.wsService.connected) {
       return "Not connected";
     }
+
+    console.log("refresj");
 
     this.wsService.sendMessage(
       JSON.stringify({

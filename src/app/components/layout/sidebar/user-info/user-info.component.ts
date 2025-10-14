@@ -1,4 +1,4 @@
-import { Component, inject, output } from "@angular/core";
+import { Component, inject, output, signal } from "@angular/core";
 import { Router, RouterLink } from "@angular/router";
 import type { MenuItem } from "primeng/api";
 import { Avatar } from "primeng/avatar";
@@ -20,14 +20,13 @@ export class UserInfoComponent {
   private authService = inject(AuthService);
   private deviceService = inject(DeviceService);
 
-  profile: Profile | null = null;
-  visible = false;
+  visible = signal(false);
+  profile = signal(null as Profile | null);
   setOpenModal = output<"createRoom" | "findRooms">();
 
-  menuThemes = formThemes.menuThemes;
-  buttonThemes = formThemes.buttonThemes;
-
-  actions: MenuItem[] = [
+  readonly menuThemes = formThemes.menuThemes;
+  readonly buttonThemes = formThemes.buttonThemes;
+  readonly actions: MenuItem[] = [
     {
       label: "Grupos",
       items: [
@@ -64,11 +63,11 @@ export class UserInfoComponent {
 
   constructor() {
     this.authService.getProfile().subscribe((profile) => {
-      this.profile = profile;
+      this.profile.set(profile);
     });
 
     this.authService.profileChanged.subscribe((newProfile) => {
-      this.profile = newProfile;
+      this.profile.set(newProfile);
     });
   }
 

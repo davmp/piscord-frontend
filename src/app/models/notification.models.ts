@@ -20,3 +20,5 @@ export interface WSNotification {
   type: string;
   object_id: string;
 }
+
+export interface MessageNotification {}

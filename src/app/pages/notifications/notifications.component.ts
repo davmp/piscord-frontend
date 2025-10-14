@@ -22,12 +22,9 @@ export class NotificationsComponent {
   constructor() {
     this.loadNotifications();
 
-    this.notificationService.notificationSubscription.subscribe(
-      (notification) => {
-        console.log("New notification arrived: ", notification);
-        this.loadNotifications();
-      }
-    );
+    this.notificationService.notificationSubscription.subscribe(() => {
+      this.loadNotifications();
+    });
   }
 
   loadNotifications() {

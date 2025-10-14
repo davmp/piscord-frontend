@@ -61,11 +61,11 @@ export class CreateRoomComponent {
 
       const createRoomRequest = {
         name: val.name,
-        info: val.info,
+        description: val.info,
         type: val.type,
         picture: val.picture,
-        maxMembers: val.maxMembers > 0 ? val.maxMembers : undefined,
-        participantIDs: val.participantIDs,
+        max_members: val.maxMembers > 0 ? val.maxMembers : undefined,
+        participant_ids: val.participantIDs,
       };
       this.chatService.createRoom(createRoomRequest).subscribe((room) => {
         this.router.navigateByUrl(`/rooms/${room.id}`);
