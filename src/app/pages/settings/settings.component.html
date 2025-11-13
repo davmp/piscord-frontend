@@ -18,11 +18,11 @@
     (ngSubmit)="updateProfile()"
     class="space-y-4 px-4 w-full max-w-4xl mx-auto text-stone-400"
   >
-    @if (errorMessage) {
+    @if (errorMessage()) {
     <p-message severity="error" styleClass="mb-4!">{{
-      errorMessage
+      errorMessage()
     }}</p-message>
-    } @if (success) {
+    } @if (success()) {
     <p-message severity="success" styleClass="mb-4!"
       >Perfil atualizado com sucesso</p-message
     >
@@ -128,7 +128,7 @@
       <p-button
         label="Editar"
         type="submit"
-        [loading]="isLoading"
+        [loading]="isLoading()"
         [dt]="buttonThemes.primary"
         fluid
       ></p-button>

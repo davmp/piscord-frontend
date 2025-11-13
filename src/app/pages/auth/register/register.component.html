@@ -9,6 +9,12 @@
       <p class="text-sm text-stone-300">Estamos felizes em vê-lo novamente.</p>
     </div>
 
+    @if (errorMessage()) {
+    <p-message severity="error" styleClass="mb-4!">{{
+      errorMessage()
+    }}</p-message>
+    }
+
     <form [formGroup]="registerForm" (ngSubmit)="register()" class="space-y-4">
       <div class="flex flex-col space-y-1">
         <label for="username" class="text-sm"
@@ -98,7 +104,12 @@
         }
       </div>
 
-      <p-button type="submit" [dt]="buttonThemes.primary" fluid>
+      <p-button
+        type="submit"
+        [dt]="buttonThemes.primary"
+        [loading]="isLoading()"
+        fluid
+      >
         Criar conta
       </p-button>
       <span class="text-stone-400 text-sm"

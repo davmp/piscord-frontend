@@ -1,4 +1,4 @@
-import { Component, inject, input, output } from "@angular/core";
+import { Component, inject, input, output, signal } from "@angular/core";
 import {
   FormBuilder,
   ReactiveFormsModule,
@@ -10,11 +10,11 @@ import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
 import { InputTextModule } from "primeng/inputtext";
 import { TextareaModule } from "primeng/textarea";
-import { ChatService } from "../../../../services/chat/chat.service";
-import * as themes from "../../../../themes/form.themes";
+import { ChatService } from "../../../services/chat/chat.service";
+import * as themes from "../../../themes/form.themes";
 
 @Component({
-  selector: "app-create-room",
+  selector: "app-create-room-modal",
   imports: [
     DialogModule,
     InputTextModule,
@@ -22,9 +22,9 @@ import * as themes from "../../../../themes/form.themes";
     ButtonModule,
     ReactiveFormsModule,
   ],
-  templateUrl: "./create-room.component.html",
+  templateUrl: "./create-room-modal.component.html",
 })
-export class CreateRoomComponent {
+export class CreateRoomModalComponent {
   private chatService = inject(ChatService);
   private formBuilder = inject(FormBuilder);
   private router = inject(Router);
@@ -32,11 +32,11 @@ export class CreateRoomComponent {
 
   visible = input<boolean>();
   setVisible = output<boolean>();
-  loading = false;
+  isLoading = signal(false);
 
-  buttonThemes = themes.buttonThemes;
-  inputThemes = themes.inputThemes;
-  dialogThemes = themes.dialogThemes;
+  readonly buttonThemes = themes.buttonThemes;
+  readonly inputThemes = themes.inputThemes;
+  readonly dialogThemes = themes.dialogThemes;
 
   constructor() {
     this.form = this.formBuilder.group({
@@ -50,14 +50,14 @@ export class CreateRoomComponent {
   }
 
   createRoom() {
-    if (this.form.invalid || this.loading) {
+    if (this.form.invalid || this.isLoading()) {
       return;
     }
 
     const val = this.form.value;
 
     if (val.name && val.type) {
-      this.loading = true;
+      this.isLoading.set(true);
 
       const createRoomRequest = {
         name: val.name,
@@ -73,7 +73,7 @@ export class CreateRoomComponent {
         this.form.reset();
       });
 
-      this.loading = false;
+      this.isLoading.set(false);
     }
   }
 

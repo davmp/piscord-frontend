@@ -1,55 +1,41 @@
-import {
-  Component,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-} from "@angular/core";
+import { Component, effect, input, output, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { RouterLink } from "@angular/router";
 import { AutoFocus } from "primeng/autofocus";
 import { Avatar } from "primeng/avatar";
-import { Button } from "primeng/button";
-import { Popover } from "primeng/popover";
+import { Image } from "primeng/image";
 import { Textarea } from "primeng/textarea";
 import {
   DisplayMessage,
   type SelectedMessageEdit,
   type SelectedReplyMessage,
 } from "../../../models/message.models";
-import type { Profile } from "../../../models/user.models";
-import { UserService } from "../../../services/user/user.service";
 import * as formThemes from "../../../themes/form.themes";
+import { formatDate, formatDateLong } from "../../../utils/date-formatter";
+import { UserPopoverComponent } from "../../display/profile-popover/user-popover.component";
 
 @Component({
   selector: "app-message",
   imports: [
     Avatar,
-    Popover,
     Textarea,
-    Button,
+    Image,
     AutoFocus,
     FormsModule,
-    RouterLink,
+    UserPopoverComponent,
   ],
   templateUrl: "./message.component.html",
 })
 export class MessageComponent {
-  private userService = inject(UserService);
-
   message = input<DisplayMessage>();
   diffTime = input(true);
   isSelected = input(false);
-
   onEditMessage = output<SelectedMessageEdit>();
   onSelectReplyMessage = output<SelectedReplyMessage>();
 
   newMessageContent = signal("");
   isEditingMessage = signal(false);
-  userInfo = signal<Profile | null>(null);
-  userInfoLoading = signal(false);
-  userPopupError = signal(null as string | null);
+  showMobileActions = signal(false);
+  private longPressTimeout: any;
 
   readonly menuThemes = formThemes.menuThemes;
   readonly inputThemes = formThemes.inputThemes;
@@ -59,20 +45,6 @@ export class MessageComponent {
     effect(() => {
       this.newMessageContent.set(this.message()?.content || "");
     });
-  }
-
-  showUserPopup() {
-    this.userInfoLoading.set(true);
-    this.userInfo.set(null);
-    this.userPopupError.set(null);
-    const id = this.message()?.user_id;
-    if (id) {
-      this.userService.getProfileById(id).subscribe({
-        next: (profile) => this.userInfo.set(profile),
-        error: () => this.userPopupError.set("Erro ao carregar usuário."),
-      });
-    }
-    this.userInfoLoading.set(false);
   }
 
   handleReplyMessage() {
@@ -104,30 +76,26 @@ export class MessageComponent {
     });
   }
 
-  get formattedDate(): string {
-    const createdAt = this.message()?.created_at;
-    if (!createdAt) return "";
-
-    const date = new Date(createdAt);
-    return date.toLocaleTimeString(["pt-BR"], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+  formattedDate() {
+    const createdAt = this.message()?.created_at || "";
+    return formatDate(createdAt);
   }
 
-  get formattedFullDate(): string {
-    const createdAt = this.message()?.created_at;
-    if (!createdAt) return "";
+  formattedFullDate() {
+    const createdAt = this.message()?.created_at || "";
+    return formatDateLong(createdAt);
+  }
 
-    const date = new Date(createdAt);
-    return date.toLocaleString(["pt-BR"], {
-      year: "2-digit",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+  handleLongPressStart() {
+    this.longPressTimeout = setTimeout(() => {
+      this.showMobileActions.set(true);
+    }, 600);
+  }
+
+  handleLongPressEnd() {
+    clearTimeout(this.longPressTimeout);
+    setTimeout(() => {
+      this.showMobileActions.set(false);
+    }, 100);
   }
 }

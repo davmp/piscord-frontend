@@ -2,30 +2,26 @@ import { Component, inject, signal } from "@angular/core";
 import { RouterOutlet } from "@angular/router";
 import { SplitterModule } from "primeng/splitter";
 import { DeviceService } from "../../services/device.service";
-import { AuthService } from "../../services/user/auth/auth.service";
-import { CreateRoomComponent } from "../chat/modals/create-room/create-room.component";
-import { FindRoomComponent } from "../chat/modals/find-room/find-room.component";
+import { CreateRoomModalComponent } from "../display/create-room-modal/create-room-modal.component";
+import { FindRoomModalComponent } from "../display/find-room-modal/find-room-modal.component";
 import { SidebarComponent } from "./sidebar/sidebar.component";
 
 @Component({
   selector: "app-layout",
   imports: [
     RouterOutlet,
-    CreateRoomComponent,
-    FindRoomComponent,
+    CreateRoomModalComponent,
+    FindRoomModalComponent,
     SidebarComponent,
     SplitterModule,
   ],
   templateUrl: "./layout.component.html",
 })
 export class LayoutComponent {
-  authService = inject(AuthService);
   private deviceService = inject(DeviceService);
 
   createRoomModalVisible = signal(false);
   findRoomModalVisible = signal(false);
-
-  roomId: string | null = null;
 
   handleOpenModal(type: string) {
     if (type === "createRoom") {
@@ -40,6 +36,6 @@ export class LayoutComponent {
   }
 
   isHome() {
-    return this.deviceService.isInPathname(["/", "chat"]);
+    return this.deviceService.isInPathname(["/", "/chat"]);
   }
 }

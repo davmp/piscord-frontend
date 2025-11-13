@@ -21,12 +21,12 @@
 </p-splitter>
 }
 
-<app-create-room
+<app-create-room-modal
   [visible]="createRoomModalVisible()"
   (setVisible)="createRoomModalVisible.set($event)"
-></app-create-room>
+></app-create-room-modal>
 
-<app-find-room
+<app-find-room-modal
   [visible]="findRoomModalVisible()"
   (setVisible)="findRoomModalVisible.set($event)"
-></app-find-room>
+></app-find-room-modal>

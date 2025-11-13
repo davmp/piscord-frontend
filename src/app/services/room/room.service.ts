@@ -1,11 +1,13 @@
 import { HttpClient } from "@angular/common/http";
-import { inject, Injectable, signal } from "@angular/core";
-import { catchError, Observable, shareReplay } from "rxjs";
+import { inject, Injectable } from "@angular/core";
+import { BehaviorSubject, catchError, Observable, shareReplay } from "rxjs";
 import type {
   CreateRoomRequest,
   GetRooms,
   PublicRoom,
-  Room,
+  RoomDetails as Room,
+  RoomDetails,
+  UpdateRoomRequest,
 } from "../../models/rooms.models";
 
 @Injectable({
@@ -14,11 +16,8 @@ import type {
 export class RoomService {
   private readonly roomsApiUrl = "/api/rooms";
   private http = inject(HttpClient);
-  selectedRoom = signal<Room | null>(null);
 
-  selectRoom(room: Room | null) {
-    this.selectedRoom.set(room);
-  }
+  selectedRoom = new BehaviorSubject<RoomDetails | null>(null);
 
   getRooms(search: string): Observable<GetRooms<PublicRoom>> {
     return this.http
@@ -27,9 +26,9 @@ export class RoomService {
       })
       .pipe(
         shareReplay(),
-        catchError((error) => {
-          console.error("Error fetching rooms:", error);
-          return [];
+        catchError((err) => {
+          console.error("Error fetching rooms:", err);
+          throw err;
         })
       );
   }
@@ -37,59 +36,75 @@ export class RoomService {
   getMyRooms(): Observable<GetRooms> {
     return this.http.get<GetRooms>(`${this.roomsApiUrl}/my-rooms`).pipe(
       shareReplay(),
-      catchError((error) => {
-        console.error("Error fetching rooms:", error);
-        return [];
+      catchError((err) => {
+        console.error("Error fetching rooms:", err);
+        throw err;
       })
     );
   }
 
-  getRoom(id: string): Observable<Room> {
-    return this.http.get<Room>(`${this.roomsApiUrl}/${id}`).pipe(
+  getRoom(id: string): Observable<RoomDetails> {
+    return this.http.get<RoomDetails>(`${this.roomsApiUrl}/${id}`).pipe(
       shareReplay(),
-      catchError((error) => {
-        console.error(`Error fetching room with id ${id}:`, error);
-        throw error;
+      catchError((err) => {
+        console.error(`Error fetching room with id ${id}:`, err);
+        throw err;
       })
     );
   }
 
-  getDirectRoom(userId: string): Observable<Room> {
-    return this.http.get<Room>(`${this.roomsApiUrl}/direct/${userId}`).pipe(
-      shareReplay(),
-      catchError((error) => {
-        console.error(
-          `Error fetching direct room with user ID ${userId}:`,
-          error
-        );
-        throw error;
-      })
-    );
+  getDirectRoom(userId: string): Observable<RoomDetails> {
+    return this.http
+      .get<RoomDetails>(`${this.roomsApiUrl}/direct/${userId}`)
+      .pipe(
+        shareReplay(),
+        catchError((err) => {
+          console.error(
+            `Error fetching direct room with user ID ${userId}:`,
+            err
+          );
+          throw err;
+        })
+      );
   }
 
   createRoom(data: CreateRoomRequest): Observable<Room> {
     return this.http.post<Room>(this.roomsApiUrl, data).pipe(
-      catchError((error) => {
-        console.error("Error creating room:", error);
-        throw error;
+      catchError((err) => {
+        console.error("Error creating room:", err);
+        throw err;
       })
     );
   }
 
+  updateRoom(
+    roomId: string,
+    data: Partial<UpdateRoomRequest>
+  ): Observable<RoomDetails> {
+    return this.http
+      .put<RoomDetails>(`${this.roomsApiUrl}/${roomId}`, data)
+      .pipe(
+        catchError((err) => {
+          console.error("Error creating room:", err);
+          throw err;
+        })
+      );
+  }
+
   joinRoom(id: string): Observable<void> {
     return this.http.post<void>(`${this.roomsApiUrl}/${id}/join`, {}).pipe(
-      catchError((error) => {
-        console.error(`Error joining room with id ${id}:`, error);
-        throw error;
+      catchError((err) => {
+        console.error(`Error joining room with id ${id}:`, err);
+        throw err;
       })
     );
   }
 
   leaveRoom(id: string): Observable<void> {
     return this.http.post<void>(`${this.roomsApiUrl}/${id}/leave`, {}).pipe(
-      catchError((error) => {
-        console.error(`Error leaving room with id ${id}:`, error);
-        throw error;
+      catchError((err) => {
+        console.error(`Error leaving room with id ${id}:`, err);
+        throw err;
       })
     );
   }

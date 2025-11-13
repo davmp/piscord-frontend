@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Observable } from "rxjs";
+import { catchError, Observable, shareReplay } from "rxjs";
 import type { MessagePaginationResult } from "../../models/message.models";
 
 @Injectable({
@@ -18,9 +18,16 @@ export class MessageService {
     let params = new HttpParams();
     params = params.append("page", page.toString());
     params = params.append("limit", limit.toString());
-    return this.http.get<MessagePaginationResult>(
-      `${this.apiUrl}/${roomId}/messages`,
-      { params }
-    );
+    return this.http
+      .get<MessagePaginationResult>(`${this.apiUrl}/${roomId}/messages`, {
+        params,
+      })
+      .pipe(
+        shareReplay(),
+        catchError((err) => {
+          console.error("Error fetching messages: ", err);
+          throw err;
+        })
+      );
   }
 }

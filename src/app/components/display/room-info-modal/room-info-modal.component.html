@@ -1,0 +1,279 @@
+<div (click)="handleShowDialog()">
+  <ng-content></ng-content>
+</div>
+
+@if (isMobile()) {
+<p-drawer
+  [dt]="menuThemes.ghost"
+  styleClass="bg-stone-800! border-[1px_0_0_0]! border-stone-700! h-fit! *:text-stone-400! rounded-t-2xl! overflow-hidden!"
+  [(visible)]="visible"
+  [closable]="false"
+  position="bottom"
+>
+  <ng-template #header>
+    <div class="w-full flex flex-col space-y-2 mt-12">
+      <span
+        class="absolute top-0 right-0 left-0 h-28 bg-[url('/assets/auth-bg.png')] bg-cover bg-center"
+      ></span>
+      <div class="absolute top-[120px] right-2 flex items-center space-x-1">
+        @if (room()?.is_admin) {
+        <p-button
+          styleClass="text-stone-400 size-8"
+          [dt]="buttonThemes.outlined"
+          (click)="handleEditRoom()"
+        >
+          <i pButtonIcon class="pi pi-pencil text-sm!"></i>
+        </p-button>
+        }
+        <p-button
+          styleClass="text-red-400! size-8"
+          [dt]="buttonThemes.outlined"
+          (click)="handleLeaveRoom()"
+        >
+          <i pButtonIcon class="pi pi-sign-out text-sm!"></i>
+        </p-button>
+      </div>
+      <div class="relative size-20">
+        <p-avatar
+          [image]="room()?.picture ?? '/assets/piscord.svg'"
+          shape="circle"
+          class="size-full! [&_img]:object-cover border-4 border-stone-800 bg-lime-600!"
+        />
+      </div>
+      <div class="flex-1 flex items-end">
+        <div class="overflow-hidden text-ellipsis space-y-1">
+          <p class="text-xl font-semibold text-stone-100 truncate">
+            {{ room()?.display_name }}
+          </p>
+          <p class="text-xs text-stone-400 truncate">#{{ room()?.id }}</p>
+        </div>
+        <span
+          class="ml-auto text-sm text-stone-400 font-light"
+          >{{ `${room()?.member_count}/${room()?.max_members ?? 50}` }}</span
+        >
+      </div>
+    </div>
+  </ng-template>
+
+  <p-tabs value="about" styleClass="[&_.p-tablist]:bg-transparent!">
+    <p-tablist
+      class="bg-transparent! p-0! [&_.p-tablist-tab-list]:border-stone-700! [&_.p-tab]:font-normal! [&_.p-tab]:text-md! [&_.p-tab]:border-stone-700! [&_.p-tab]:text-stone-400! [&_.p-tab:hover]:text-stone-300/80! [&_.p-tab]:p-[8px_12px]! [&_.p-tab-active]:border-stone-200! [&_.p-tab-active]:text-stone-200! [&_.p-tablist-active-bar]:bg-stone-200!"
+    >
+      <p-tab value="about">Sobre</p-tab>
+      <p-tab value="members">Membros</p-tab>
+    </p-tablist>
+    <p-tabpanels class="bg-transparent! p-0! mt-4 text-stone-100!">
+      <p-tabpanel value="about">
+        <div class="space-y-4 p-4">
+          <div class="w-full flex flex-col text-sm">
+            <span class="text-xs font-normal">Criado em</span>
+            <p class="font-light font-lg">
+              {{ formatDate(room()?.created_at) }}
+            </p>
+          </div>
+
+          @if (room()?.description) {
+          <div class="w-full flex flex-col text-sm">
+            <span class="text-xs font-normal">Descrição</span>
+            <p
+              class="font-light font-lg break-words whitespace-pre-wrap hyphens-auto"
+            >
+              {{ room()?.description?.trim() }}
+            </p>
+          </div>
+          }
+        </div>
+      </p-tabpanel>
+
+      <p-tabpanel value="members" class="px-0!">
+        <div class="overflow-y-auto hide-scrollbar">
+          <ul class="flex-1 h-full relative space-y-1">
+            @if (room()?.members?.length! <= 0) {
+            <li class="absolute inset-0 grid place-content-center">
+              <span class="text-neutral-400">Nenhum membro ainda.</span>
+            </li>
+            } @for (member of members(); track member.user_id) {
+            <app-user-popover [userId]="member.user_id" [isOwn]="member.is_me">
+              <div
+                class="flex-1 flex items-center gap-3 rounded-lg p-1 px-2 group/member"
+              >
+                <div class="relative size-10">
+                  <p-avatar
+                    [image]="member.picture ?? '/assets/piscord.svg'"
+                    shape="circle"
+                    styleClass="size-full! [&_img]:object-cover bg-lime-600!"
+                  />
+                  <span
+                    class="absolute -bottom-0.5 -right-0.5 size-3 border-2 border-stone-800 rounded-full {{
+                      member.is_online ? 'bg-green-500' : 'bg-red-500'
+                    }}"
+                  ></span>
+                </div>
+                <div class="flex-1 flex items-center gap-1 overflow-x-hidden">
+                  <span class="text-lg text-start text-nowrap truncate">
+                    {{ member.is_me ? "Eu" : member.username }}
+                  </span>
+                  @if (member.is_admin) {
+                  <span class="px-1 text-xs bg-stone-500 rounded-sm">
+                    Admin
+                  </span>
+                  }
+                </div>
+                <div class="ml-auto flex items-center space-x-2">
+                  @if (!member.is_me && room()?.is_admin && !member.is_admin) {
+                  <p-button
+                    class="grid place-content-center hover:text-stone-200 text-stone-500"
+                    (click)="handleRemoveMember(member.user_id)"
+                    severity="danger"
+                    icon="pi pi-trash"
+                    [dt]="buttonThemes.outlined"
+                  >
+                  </p-button>
+                  }
+                </div>
+              </div>
+            </app-user-popover>
+            }
+          </ul>
+        </div>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</p-drawer>
+} @else {
+<p-dialog
+  [showHeader]="false"
+  [modal]="true"
+  [(visible)]="visible"
+  [closeOnEscape]="true"
+  [closeButtonProps]="{ styleClass: 'hidden!' }"
+  [closeIcon]="'pi pi-times'"
+  [blockScroll]="true"
+  [style]="{ width: '50rem' }"
+  [breakpoints]="{ '978px': '90vw', '575px': '90vw' }"
+  [dt]="dialogThemes.custom"
+  [dismissableMask]="true"
+  contentStyleClass="bg-stone-800! grid! grid-cols-[3fr_2fr]! gap-4! p-6! pb-0! rounded-lg! overflow-hidden! min-h-[512px]! max-h-[812px]!"
+>
+  <div
+    class="col-start-1 col-end-2 relative bg-stone-700 shadow-lg p-6 rounded-t-2xl flex flex-col gap-6 overflow-hidden h-full"
+  >
+    <div class="w-full flex flex-col space-y-2 mt-12">
+      <span
+        class="absolute top-0 right-0 left-0 h-28 bg-[url('/assets/auth-bg.png')] bg-cover bg-center"
+      ></span>
+      <div class="absolute top-[120px] right-2 flex items-center space-x-1">
+        @if (room()?.is_admin) {
+        <p-button
+          styleClass="text-stone-400 size-8"
+          [dt]="buttonThemes.outlined"
+          (click)="handleEditRoom()"
+        >
+          <i pButtonIcon class="pi pi-pencil text-sm!"></i>
+        </p-button>
+        }
+        <p-button
+          styleClass="text-red-400! size-8"
+          [dt]="buttonThemes.outlined"
+          (click)="handleLeaveRoom()"
+        >
+          <i pButtonIcon class="pi pi-sign-out text-sm!"></i>
+        </p-button>
+      </div>
+      <div class="relative size-20">
+        <p-avatar
+          [image]="room()?.picture ?? '/assets/piscord.svg'"
+          shape="circle"
+          class="size-full! [&_img]:object-cover border-4 border-stone-700 bg-lime-600!"
+        />
+      </div>
+      <div class="flex-1 overflow-hidden text-ellipsis space-y-1">
+        <p class="text-xl font-semibold text-stone-100 truncate">
+          {{ room()?.display_name }}
+        </p>
+        <p class="text-xs text-stone-400 truncate">#{{ room()?.id }}</p>
+      </div>
+    </div>
+
+    <div class="w-full flex flex-col text-sm">
+      <span class="text-xs font-normal">Criado em</span>
+      <p class="font-light">
+        {{ formatDate(room()?.created_at) }}
+      </p>
+    </div>
+
+    @if (room()?.description) {
+    <div class="w-full flex flex-col text-sm">
+      <span class="text-xs font-normal">Descrição</span>
+      <p class="font-light break-words whitespace-pre-wrap hyphens-auto">
+        {{ room()?.description?.trim() }}
+      </p>
+    </div>
+    }
+  </div>
+
+  <div class="flex flex-col overflow-hidden">
+    <div class="w-full flex items-center gap-2 border-b border-b-stone-700">
+      <h1
+        class="w-fit py-2 border-b-2 border-b-stone-200 text-sm font-medium rounded-xs"
+      >
+        Membros
+      </h1>
+      <span
+        class="ml-auto text-sm text-stone-400 font-light"
+        >{{ `${room()?.member_count}/${room()?.max_members ?? 50}` }}</span
+      >
+    </div>
+    <div class="overflow-y-auto hide-scrollbar pt-4">
+      <ul class="flex-1 h-full relative space-y-1">
+        @if (room()?.members?.length! <= 0) {
+        <li class="absolute inset-0 grid place-content-center">
+          <span class="text-neutral-400">Nenhum membro ainda.</span>
+        </li>
+        } @for (member of members(); track member.user_id) {
+        <app-user-popover [userId]="member.user_id" [isOwn]="member.is_me">
+          <div
+            class="flex-1 flex items-center gap-3 hover:bg-stone-600/20 rounded-lg p-1 px-2 group/member"
+          >
+            <div class="relative size-8">
+              <p-avatar
+                [image]="member.picture ?? '/assets/piscord.svg'"
+                shape="circle"
+                styleClass="min-w-8! [&_img]:object-cover bg-lime-600!"
+              />
+              <span
+                class="absolute -bottom-0.5 -right-0.5 size-3 border-2 border-stone-800 rounded-full {{
+                  member.is_online ? 'bg-green-500' : 'bg-red-500'
+                }}"
+              ></span>
+            </div>
+            <div class="flex-1 flex items-center gap-1 overflow-x-hidden">
+              <span class="text-start text-nowrap truncate">
+                {{ member.is_me ? "Eu" : member.username }}
+              </span>
+              @if (member.is_admin) {
+              <span class="px-1 text-xs bg-stone-500 rounded-sm"> Admin </span>
+              }
+            </div>
+            <div
+              class="ml-auto hidden group-hover/member:flex items-center space-x-2"
+            >
+              @if (!member.is_me && room()?.is_admin && !member.is_admin) {
+              <p-button
+                class="grid place-content-center hover:text-stone-200 text-stone-500"
+                (click)="handleRemoveMember(member.user_id)"
+                severity="danger"
+                icon="pi pi-trash"
+                [dt]="buttonThemes.outlined"
+              >
+              </p-button>
+              }
+            </div>
+          </div>
+        </app-user-popover>
+        }
+      </ul>
+    </div>
+  </div>
+</p-dialog>
+}

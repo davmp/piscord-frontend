@@ -1,0 +1,126 @@
+<p-dialog
+  header="Atualizar sala"
+  [modal]="true"
+  [visible]="visible() || false"
+  (visibleChange)="handleSetVisible($event)"
+  [closable]="!isLoading()"
+  [breakpoints]="{ '960px': '50vw', '640px': '75vw', '480px': '95vw' }"
+  [style]="{ width: '25rem' }"
+  [dt]="dialogThemes.custom"
+  styleClass="[&_.p-dialog-close-button]:rounded-lg! [&_.p-dialog-close-button]:hover:bg-stone-600/60! [&_.p-dialog-close-button]:text-stone-400! [&_.p-dialog-close-button]:size-7! [&_.p-dialog-close-button]:p-1.5!"
+>
+  <form [formGroup]="form" (ngSubmit)="updateRoom()" class="space-y-4">
+    @if (errorMessage()) {
+    <p-message severity="error" styleClass="mb-4!">{{
+      errorMessage()
+    }}</p-message>
+    } @if (success()) {
+    <p-message severity="success" styleClass="mb-4!"
+      >Sala atualizada com sucesso</p-message
+    >
+    }
+
+    <div class="flex flex-col space-y-1">
+      <label for="name" class="text-sm" aria-required="true"
+        >Nome <span class="text-red-600">*</span></label
+      >
+      <input
+        pInputText
+        type="text"
+        id="name"
+        formControlName="name"
+        aria-errormessage="name-error"
+        [dt]="inputThemes.outlined"
+        fluid
+      />
+      @if (form.get('name')?.invalid && form.get('name')?.touched) {
+      <small id="name-error" class="text-red-600">Nome inválido.</small>
+      }
+    </div>
+
+    <div class="flex flex-col space-y-1">
+      <label for="maxMembers" class="text-sm" aria-required="true"
+        >Limite de membros <span class="text-red-600">*</span></label
+      >
+      <p-inputnumber
+        id="maxMembers"
+        formControlName="maxMembers"
+        aria-errormessage="maxMembers-error"
+        fluid
+        styleClass="[&_.p-inputnumber-input]:bg-[#26262677]! [&_.p-inputnumber-input]:text-stone-100! [&_.p-inputnumber-input]:border-stone-600! [&_.p-inputnumber-input:hover]:border-stone-500! [&_.p-inputnumber-input:focus]:ring-stone-500! [&_.p-inputnumber-input:focus]:border-stone-600! [&_.p-inputnumber-button]:border-stone-600! rounded-[8px]!"
+        [min]="1"
+        [max]="200"
+        [showButtons]="true"
+        buttonLayout="horizontal"
+        inputId="horizontal"
+        spinnerMode="horizontal"
+        [step]="2"
+      >
+        <ng-template #incrementbuttonicon>
+          <span class="pi pi-plus"></span>
+        </ng-template>
+        <ng-template #decrementbuttonicon>
+          <span class="pi pi-minus"></span>
+        </ng-template>
+      </p-inputnumber>
+      @if (form.get('maxMembers')?.invalid && form.get('maxMembers')?.touched) {
+      <small id="maxMembers-error" class="text-red-600">Nome inválido.</small>
+      }
+    </div>
+
+    <div class="flex flex-col space-y-1">
+      <label for="picture" class="text-sm">URL da imagem</label>
+      <input
+        pInputText
+        type="text"
+        id="picture"
+        formControlName="picture"
+        aria-errormessage="picture-error"
+        placeholder="https://example.com/image.png"
+        [dt]="inputThemes.outlined"
+        fluid
+      />
+      @if (form.get('picture')?.invalid && form.get('picture')?.touched) {
+      <small id="picture-error" class="text-red-600">URL inválida.</small>
+      }
+    </div>
+
+    <div class="flex flex-col space-y-1">
+      <label for="description" class="text-sm" aria-required="true"
+        >Descrição</label
+      >
+      <textarea
+        pTextarea
+        id="description"
+        formControlName="description"
+        aria-errormessage="description-error"
+        rows="1"
+        [maxlength]="200"
+        [dt]="inputThemes.outlined"
+        [autoResize]="true"
+        fluid
+      ></textarea>
+      @if (form.get('description')?.invalid && form.get('description')?.touched)
+      {
+      <small id="description-error" class="text-red-600"
+        >Descrição inválida.</small
+      >
+      }
+    </div>
+
+    <div class="flex justify-end gap-2 mt-4">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        (click)="handleSetVisible(false)"
+        [disabled]="isLoading()"
+      />
+      <p-button
+        label="Editar"
+        type="submit"
+        [loading]="isLoading()"
+        fluid
+      ></p-button>
+    </div>
+  </form>
+</p-dialog>

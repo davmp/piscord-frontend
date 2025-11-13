@@ -1,4 +1,5 @@
-import { Component, inject } from "@angular/core";
+import { Component, inject, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
   FormBuilder,
   FormGroup,
@@ -14,7 +15,8 @@ import { InputText } from "primeng/inputtext";
 import { Message } from "primeng/message";
 import { Password } from "primeng/password";
 import { Textarea } from "primeng/textarea";
-import type { Profile, UpdateProfileRequest } from "../../models/user.models";
+import { catchError, EMPTY, finalize, startWith, tap } from "rxjs";
+import type { UpdateProfileRequest } from "../../models/user.models";
 import { AuthService } from "../../services/user/auth/auth.service";
 import * as themes from "../../themes/form.themes";
 
@@ -39,15 +41,27 @@ export class SettingsComponent {
   private formBuilder = inject(FormBuilder);
   form: FormGroup;
 
-  isLoading = false;
-  success = false;
-  errorMessage: string | null = null;
-  private profile: Profile | null = null;
+  readonly profile = signal(this.authService.profileChanged.value);
+  isLoading = signal(false);
+  success = signal(false);
+  errorMessage = signal(undefined as string | undefined);
 
-  buttonThemes = themes.buttonThemes;
-  inputThemes = themes.inputThemes;
+  readonly buttonThemes = themes.buttonThemes;
+  readonly inputThemes = themes.inputThemes;
 
   constructor() {
+    this.getProfile();
+
+    this.authService.profileChanged.pipe(takeUntilDestroyed()).subscribe({
+      next: (profile) => {
+        this.form.get("username")?.setValue(profile?.username);
+        this.form.get("picture")?.setValue(profile?.picture);
+        this.form.get("bio")?.setValue(profile?.bio);
+
+        this.profile.set(profile);
+      },
+    });
+
     this.form = this.formBuilder.group({
       username: [
         "",
@@ -64,65 +78,49 @@ export class SettingsComponent {
         Validators.compose([Validators.minLength(4), Validators.maxLength(50)]),
       ],
     });
-    this.getProfile();
   }
 
   getProfile() {
-    this.isLoading = true;
-    this.authService.getProfile().subscribe({
-      next: (profile) => {
-        this.profile = profile;
-        this.form.get("username")?.setValue(profile.username);
-        this.form.get("picture")?.setValue(profile.picture);
-        this.form.get("bio")?.setValue(profile.bio);
-      },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage = err.error.message;
-      },
-    });
-    this.isLoading = false;
+    this.isLoading.set(true);
+    this.authService.getProfile().subscribe(() => this.isLoading.set(false));
   }
 
   updateProfile() {
-    this.isLoading = true;
-    this.success = false;
-    this.errorMessage = null;
+    this.errorMessage.set(undefined);
 
+    const dat = this.getChangedFields();
+    this.authService
+      .updateProfile(dat)
+      .pipe(
+        tap(() => this.success.set(true)),
+        finalize(() => this.isLoading.set(false)),
+        catchError((err) => {
+          this.errorMessage.set(
+            err.error.error ?? "Ocorreu um erro ao atualizar o perfil."
+          );
+          return EMPTY;
+        }),
+        startWith(() => this.isLoading.set(true))
+      )
+      .subscribe();
+  }
+
+  getChangedFields(): Partial<UpdateProfileRequest> {
     const dat: Partial<UpdateProfileRequest> = {};
 
-    if (this.form.get("username")?.value !== this.profile?.username) {
+    if (this.form.get("username")?.value !== this.profile()?.username) {
       dat.username = this.form.get("username")?.value;
     }
     if (this.form.get("password")?.value) {
       dat.password = this.form.get("password")?.value;
     }
-    if (this.form.get("bio")?.value !== this.profile?.bio) {
+    if (this.form.get("bio")?.value !== this.profile()?.bio) {
       dat.bio = this.form.get("bio")?.value;
     }
-    if (this.form.get("picture")?.value !== this.profile?.picture) {
+    if (this.form.get("picture")?.value !== this.profile()?.picture) {
       dat.picture = this.form.get("picture")?.value;
     }
 
-    this.authService.updateProfile(dat).subscribe({
-      next: () => {
-        this.success = true;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error(err);
-        this.errorMessage = err.error.error;
-        this.isLoading = false;
-
-        if (err.status === 400) {
-          this.form.markAllAsTouched();
-        } else if (err.status === 409) {
-          this.form.get("username")?.setErrors({ unique: true });
-        } else {
-          this.errorMessage =
-            err.error.error ?? "Ocorreu um erro ao atualizar o perfil.";
-        }
-      },
-    });
+    return dat;
   }
 }

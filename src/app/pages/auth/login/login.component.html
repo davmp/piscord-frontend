@@ -9,6 +9,12 @@
       <p class="text-sm text-stone-300">Estamos felizes em vê-lo novamente.</p>
     </div>
 
+    @if (errorMessage()) {
+    <p-message severity="error" styleClass="mb-4!">{{
+      errorMessage()
+    }}</p-message>
+    }
+
     <form [formGroup]="loginForm" (ngSubmit)="login()" class="space-y-4">
       <div class="flex flex-col space-y-1">
         <label for="username" class="text-sm">Nome de usuário</label>
@@ -48,7 +54,12 @@
         }
       </div>
 
-      <p-button type="submit" [dt]="buttonThemes.primary" fluid>
+      <p-button
+        type="submit"
+        [loading]="isLoading()"
+        [dt]="buttonThemes.primary"
+        fluid
+      >
         Entrar
       </p-button>
       <span class="text-stone-400 text-sm"

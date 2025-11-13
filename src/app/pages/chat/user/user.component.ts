@@ -1,4 +1,11 @@
-import { Component, computed, inject, signal } from "@angular/core";
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+  ViewChild,
+  type ElementRef,
+} from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
 import { AutoFocus } from "primeng/autofocus";
@@ -48,11 +55,14 @@ export class ChatUserComponent {
   readonly buttonThemes = formThemes.buttonThemes;
   readonly inputThemes = formThemes.inputThemes;
   readonly popoverThemes = formThemes.menuThemes;
-  readonly inputPlaceholder = "Selecione uma sala para começar a conversar";
 
-  isSendDisabled = computed(
-    () => !this.newMessageContent().trim() && !this.newMessageFileUrl()
-  );
+  readonly canSend = computed(() => {
+    const content = this.newMessageContent().trim();
+    const file = this.newMessageFileUrl();
+    return content.length > 0 || (file && file.trim().length > 0);
+  });
+
+  @ViewChild("message") messageTextarea!: ElementRef<HTMLTextAreaElement>;
 
   constructor() {
     this.route.paramMap.subscribe((params) => {
@@ -86,7 +96,7 @@ export class ChatUserComponent {
     const content = this.newMessageContent();
     const fileUrl = this.newMessageFileUrl() ?? null;
 
-    if (user && this.newMessageContent().trim()) {
+    if (user && (this.newMessageContent().trim() || fileUrl)) {
       const requestData: CreateRoomRequest = {
         type: "direct",
         max_members: 2,
@@ -97,13 +107,9 @@ export class ChatUserComponent {
         next: (room) => {
           const err = this.chatService.selectRoom(room);
 
-          console.log("Selecting room: ", room, err);
-
           if (err) {
             console.error("Error entering new room: ", err);
           } else {
-            console.log({ content, fileUrl });
-
             this.chatService.sendMessage(content, null, fileUrl);
             this.router.navigate(["chat", room.id]);
           }

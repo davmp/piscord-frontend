@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FindRoomComponent } from './find-room.component';
+import { RoomInfoModalComponent } from './room-info-modal.component';
 
-describe('FindRoomComponent', () => {
-  let component: FindRoomComponent;
-  let fixture: ComponentFixture<FindRoomComponent>;
+describe('RoomInfoModalComponent', () => {
+  let component: RoomInfoModalComponent;
+  let fixture: ComponentFixture<RoomInfoModalComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FindRoomComponent]
+      imports: [RoomInfoModalComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(FindRoomComponent);
+    fixture = TestBed.createComponent(RoomInfoModalComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

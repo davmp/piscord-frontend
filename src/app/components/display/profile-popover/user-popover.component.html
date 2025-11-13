@@ -1,0 +1,80 @@
+<div (click)="ui.toggle($event); showUserPopup()">
+  <ng-content></ng-content>
+</div>
+
+<p-popover
+  #ui
+  styleClass="after:hidden! before:hidden! w-80! overflow-hidden! ml-2"
+  [dt]="menuThemes.ghost"
+>
+  <span
+    class="absolute top-0 right-0 left-0 h-22 bg-[url('/assets/auth-bg.png')] bg-cover bg-center"
+  ></span>
+  <div class="w-full flex flex-col mt-8">
+    <div>
+      <div class="relative size-20">
+        <p-avatar
+          [image]="userInfo()?.picture ?? '/assets/piscord.svg'"
+          shape="circle"
+          class="size-full! [&_img]:object-cover bg-lime-500! border-4 border-stone-700"
+        />
+        <span
+          class="absolute bottom-0 right-0 size-5 border-4 border-stone-700 rounded-full {{
+            userInfo()?.is_online ? 'bg-green-500' : 'bg-red-500'
+          }}"
+        ></span>
+      </div>
+    </div>
+    <div class="flex-1 overflow-hidden text-ellipsis">
+      <p class="text-lg font-semibold text-stone-100 truncate">
+        {{ userInfo()?.username }}
+      </p>
+      <p class="text-xs text-stone-400 truncate">#{{ userInfo()?.id }}</p>
+    </div>
+  </div>
+
+  @if (userInfo()?.bio) {
+  <div class="space-y-4 mt-2">
+    <p
+      class="text-sm font-normal text-stone-300 break-words break-all whitespace-pre-wrap hyphens-auto line-clamp-5"
+    >
+      {{ userInfo()?.bio }}
+    </p>
+  </div>
+  } @if (isOwn()) {
+  <div class="space-y-4 mt-4">
+    <p-button
+      styleClass="text-stone-400"
+      fluid
+      label="Editar Perfil"
+      routerLink="/settings"
+      [dt]="buttonThemes.primary"
+    >
+      <i pButtonIcon class="pi pi-pencil text-sm!"></i>
+    </p-button>
+  </div>
+  } @if (!isOwn()) {
+  <div class="absolute top-2 right-2 flex items-center gap-2">
+    <button
+      class="size-8 rounded-full bg-stone-700/80 text-stone-300 grid place-content-center hover:bg-stone-700 transition-colors cursor-pointer"
+    >
+      <i class="pi pi-user-plus"></i>
+    </button>
+    @if (userInfo()?.direct_chat_id) {
+    <button
+      class="size-8 rounded-full bg-stone-700/80 text-stone-300 grid place-content-center hover:bg-stone-700 transition-colors cursor-pointer"
+      routerLink="/chat/{{ userInfo()?.direct_chat_id }}"
+    >
+      <i class="pi pi-comments"></i>
+    </button>
+    }@else {
+    <button
+      class="size-8 rounded-full bg-stone-700/80 text-stone-300 grid place-content-center hover:bg-stone-700 transition-colors cursor-pointer"
+      routerLink="/chat/user/{{ userInfo()?.id }}"
+    >
+      <i class="pi pi-comments"></i>
+    </button>
+    }
+  </div>
+  }
+</p-popover>

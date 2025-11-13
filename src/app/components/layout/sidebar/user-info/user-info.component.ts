@@ -1,12 +1,13 @@
 import { Component, inject, output, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Router, RouterLink } from "@angular/router";
 import type { MenuItem } from "primeng/api";
 import { Avatar } from "primeng/avatar";
 import { Button } from "primeng/button";
 import { Drawer } from "primeng/drawer";
 import { Menu } from "primeng/menu";
-import type { Profile } from "../../../../models/user.models";
 import { DeviceService } from "../../../../services/device.service";
+import { NotificationService } from "../../../../services/notification/notification.service";
 import { AuthService } from "../../../../services/user/auth/auth.service";
 import * as formThemes from "../../../../themes/form.themes";
 
@@ -18,10 +19,12 @@ import * as formThemes from "../../../../themes/form.themes";
 export class UserInfoComponent {
   private router = inject(Router);
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
   private deviceService = inject(DeviceService);
 
+  profile = signal(this.authService.profileChanged.value);
   visible = signal(false);
-  profile = signal(null as Profile | null);
+  unreadNotificationCount = signal(undefined as string | undefined);
   setOpenModal = output<"createRoom" | "findRooms">();
 
   readonly menuThemes = formThemes.menuThemes;
@@ -62,12 +65,23 @@ export class UserInfoComponent {
   ];
 
   constructor() {
-    this.authService.getProfile().subscribe((profile) => {
-      this.profile.set(profile);
-    });
+    this.authService.profileChanged
+      .pipe(takeUntilDestroyed())
+      .subscribe((profile) => this.profile.set(profile));
 
-    this.authService.profileChanged.subscribe((newProfile) => {
-      this.profile.set(newProfile);
+    this.notificationService.notifications$
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => {
+        this.loadNotificationCount();
+      });
+  }
+
+  loadNotificationCount() {
+    this.notificationService.getUnreadNotificationCount().subscribe((count) => {
+      if (count) {
+        const showCount = count >= 100 ? "99+" : count.toString();
+        this.unreadNotificationCount.set(showCount);
+      }
     });
   }
 

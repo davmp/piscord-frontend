@@ -1,5 +1,5 @@
 <div
-  class="w-full h-[57px] bg-stone-800 border-b flex items-center border-stone-700/80 px-4"
+  class="w-full min-h-[57px] fixed top-0 right-0 left-0 bottom-auto md:relative bg-stone-800 z-20 border-b flex items-center justify-between border-stone-700/80 px-4"
 >
   <div class="h-full flex items-center space-x-2">
     @if (isMobile()) {
@@ -11,24 +11,38 @@
     }
     <div class="h-full flex items-center">
       <p-avatar
-        [image]="selectedRoom()?.picture ?? '/assets/piscord.svg'"
+        [image]="currentRoom()?.picture ?? '/assets/piscord.svg'"
         shape="circle"
         class="[&_img]:object-cover bg-lime-600!"
       />
     </div>
-    @if (selectedRoom()) {
-    <button
-      class="flex flex-col -space-y-1 cursor-pointer"
-      (click)="$event.stopPropagation()"
+    @if (currentRoom()) {
+    <app-room-info-modal
+      [room]="currentRoom()"
+      (setEditRoom)="isEditingRoom.set($event)"
     >
-      <span class="text-white text-md">
-        {{ selectedRoom()?.display_name }}
+      <span class="text-white text-md cursor-pointer">
+        {{ currentRoom()?.display_name }}
       </span>
-    </button>
+    </app-room-info-modal>
     } @else {
     <div class="flex flex-col -space-y-1">
-      <span class="text-white text-md">Chat</span>
+      <span class="text-white text-md">Selecione uma sala</span>
     </div>
     }
   </div>
+  @if (currentRoom()?.is_admin) {
+  <p-button
+    styleClass="text-stone-400 size-8"
+    [dt]="buttonThemes.outlined"
+    (click)="handleEditRoom()"
+  >
+    <i pButtonIcon class="pi pi-pencil text-sm!"></i>
+  </p-button>
+  }
 </div>
+
+<app-update-room-modal
+  [visible]="isEditingRoom()"
+  (setVisible)="isEditingRoom.set($event)"
+></app-update-room-modal>

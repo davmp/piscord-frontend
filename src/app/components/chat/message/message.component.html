@@ -10,6 +10,8 @@
     isEditingMessage.set(false);
     newMessageContent.set(message()?.content || '')
   "
+  (touchstart)="handleLongPressStart()"
+  (touchend)="handleLongPressEnd()"
 >
   @if (message()?.reply_to) {
   <div class="flex items-center gap-1 ml-5 mb-2 text-stone-400">
@@ -19,7 +21,7 @@
         [image]="message()?.reply_to?.picture || '/assets/piscord.svg'"
         shape="circle"
         styleClass="size-4! [&_img]:object-cover"
-        class="bg-stone-700!"
+        class="bg-lime-700!"
         #picture
       ></p-avatar>
       <span class="text-xs text-stone-400 font-medium text-nowrap">{{
@@ -41,100 +43,26 @@
         [image]="message()?.picture || '/assets/piscord.svg'"
         shape="circle"
         styleClass="size-10! [&_img]:object-cover"
-        class="bg-stone-700!"
+        class="bg-lime-600!"
         #picture
       ></p-avatar>
     </div>
     <div class="col-start-2 col-end-3">
-      <div class="flex items-center space-x-2">
-        <span
-          class="font-medium text-stone-200 hover:underline cursor-pointer"
-          (click)="ui.toggle($event); showUserPopup()"
-        >
-          {{ message()?.username }}
-        </span>
-        <span class="text-xs text-stone-500">
-          {{ formattedFullDate }}
-        </span>
-        <p-popover
-          #ui
-          styleClass="after:hidden! before:hidden! w-80! overflow-hidden! ml-2"
-          [dt]="menuThemes.ghost"
-        >
+      <app-user-popover
+        [userId]="message()?.user_id"
+        [isOwn]="message()?.is_own_message ?? false"
+      >
+        <div class="flex items-center space-x-2">
           <span
-            class="absolute top-0 right-0 left-0 h-22 bg-[url('/assets/auth-bg.png')] bg-cover bg-center"
-          ></span>
-          <div class="w-full flex flex-col mt-8">
-            <div>
-              <div class="relative size-20">
-                <p-avatar
-                  [image]="userInfo()?.picture ?? '/assets/piscord.svg'"
-                  shape="circle"
-                  class="size-full! [&_img]:object-cover bg-lime-500! border-4 border-stone-700"
-                />
-                <span
-                  class="absolute bottom-0 right-0 size-5 border-4 border-stone-700 rounded-full {{
-                    userInfo()?.is_online ? 'bg-green-500' : 'bg-red-500'
-                  }}"
-                ></span>
-              </div>
-            </div>
-            <div class="flex-1 overflow-hidden text-ellipsis">
-              <p class="text-lg font-semibold text-stone-100 truncate">
-                {{ userInfo()?.username }}
-              </p>
-              <p class="text-xs text-stone-400 truncate">
-                #{{ userInfo()?.id }}
-              </p>
-            </div>
-          </div>
-
-          @if (userInfo()?.bio) {
-          <div class="space-y-4 mt-2">
-            <p
-              class="text-sm font-normal text-stone-300 break-words break-all whitespace-pre-wrap hyphens-auto line-clamp-5"
-            >
-              {{ userInfo()?.bio }}
-            </p>
-          </div>
-          } @if (message()?.is_own_message) {
-          <div class="space-y-4 mt-4">
-            <p-button
-              styleClass="text-stone-400"
-              fluid
-              label="Editar Perfil"
-              routerLink="/settings"
-              [dt]="buttonThemes.primary"
-            >
-              <i pButtonIcon class="pi pi-pencil text-sm!"></i>
-            </p-button>
-          </div>
-          } @if (!message()?.is_own_message) {
-          <div class="absolute top-2 right-2 flex items-center gap-2">
-            <button
-              class="size-8 rounded-full bg-stone-700/80 text-stone-300 grid place-content-center hover:bg-stone-700 transition-colors cursor-pointer"
-            >
-              <i class="pi pi-user-plus"></i>
-            </button>
-            @if (userInfo()?.direct_chat_id) {
-            <button
-              class="size-8 rounded-full bg-stone-700/80 text-stone-300 grid place-content-center hover:bg-stone-700 transition-colors cursor-pointer"
-              routerLink="/chat/{{ userInfo()?.direct_chat_id }}"
-            >
-              <i class="pi pi-comments"></i>
-            </button>
-            }@else {
-            <button
-              class="size-8 rounded-full bg-stone-700/80 text-stone-300 grid place-content-center hover:bg-stone-700 transition-colors cursor-pointer"
-              routerLink="/chat/user/{{ userInfo()?.id }}"
-            >
-              <i class="pi pi-comments"></i>
-            </button>
-            }
-          </div>
-          }
-        </p-popover>
-      </div>
+            class="font-medium text-stone-200 hover:underline cursor-pointer"
+          >
+            {{ message()?.username }}
+          </span>
+          <span class="text-xs text-stone-500">
+            {{ formattedFullDate() }}
+          </span>
+        </div>
+      </app-user-popover>
       @if (isEditingMessage()) {
       <textarea
         pTextarea
@@ -171,8 +99,14 @@
         }
       </p>
       } @if (message()?.file_url) {
-      <div class="pb-1">
-        <img [src]="message()?.file_url" class="object-contain max-h-32" />
+      <div class="w-full pb-1">
+        <p-image
+          [src]="message()?.file_url"
+          [alt]="message()?.id + '-image'"
+          class="object-contain max-h-[512px] max-w-xs"
+          styleClass="[&_.p-image-preview-mask]:opacity-0! [&_.p-image-preview-mask]:cursor-pointer!"
+          [preview]="true"
+        />
       </div>
       }
     </div>
@@ -183,7 +117,7 @@
       <span
         class="mt-1 hidden group-hover/message:block text-[11px] text-nowrap truncate text-stone-500"
       >
-        {{ formattedDate }}
+        {{ formattedDate() }}
       </span>
     </div>
     <div class="col-start-2 col-end-3">
@@ -232,6 +166,7 @@
 
     <div
       class="absolute right-4 -top-4 opacity-0 group-hover/message:opacity-100 rounded-md w-fit p-[2px] bg-stone-800 border border-stone-700 text-stone-500 hover:border-stone-600 flex items-center z-20"
+      [class.opacity-100]="showMobileActions()"
     >
       @if (message()?.is_own_message) {
       <button

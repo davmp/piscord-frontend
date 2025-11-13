@@ -5,8 +5,8 @@ import { Router } from "@angular/router";
 @Injectable({ providedIn: "root" })
 export class DeviceService {
   private readonly mobileWidthThreshold = 768;
-  private readonly platformId = inject(PLATFORM_ID);
-  private readonly router = inject(Router);
+  private platformId = inject(PLATFORM_ID);
+  private router = inject(Router);
 
   isBrowser = isPlatformBrowser(this.platformId);
 

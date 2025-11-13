@@ -6,8 +6,8 @@ import {
   ViewChild,
   type ElementRef,
   type OnDestroy,
-  type OnInit,
 } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { AutoFocus } from "primeng/autofocus";
@@ -17,6 +17,15 @@ import { InputGroupAddon } from "primeng/inputgroupaddon";
 import { InputText } from "primeng/inputtext";
 import { Popover } from "primeng/popover";
 import { Textarea } from "primeng/textarea";
+import {
+  catchError,
+  distinctUntilChanged,
+  EMPTY,
+  filter,
+  finalize,
+  map,
+  tap,
+} from "rxjs";
 import { HeaderComponent } from "../../components/chat/header/header.component";
 import { MessageComponent } from "../../components/chat/message/message.component";
 import {
@@ -48,7 +57,7 @@ import * as formThemes from "../../themes/form.themes";
   ],
   templateUrl: "./chat.component.html",
 })
-export class ChatComponent implements OnInit, OnDestroy {
+export class ChatComponent implements OnDestroy {
   private route = inject(ActivatedRoute);
   private roomService = inject(RoomService);
   private chatService = inject(ChatService);
@@ -62,6 +71,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   newMessageReply = signal(null as SelectedReplyMessage | null);
   messages = signal<Message[]>([]);
   loadingMessages = signal(false);
+  currentRoom = signal(this.roomService.selectedRoom.value);
 
   readonly page = 1;
   readonly pageSize = 20;
@@ -69,24 +79,22 @@ export class ChatComponent implements OnInit, OnDestroy {
   readonly inputThemes = formThemes.inputThemes;
   readonly popoverThemes = formThemes.menuThemes;
 
-  @ViewChild("message") messageTextarea!: ElementRef<HTMLTextAreaElement>;
-
-  inputPlaceholder = computed(() => {
-    if (this.roomService.selectedRoom()) {
-      return this.roomService.selectedRoom()?.type === "direct"
-        ? `Converse com @${this.roomService.selectedRoom()?.display_name}`
-        : `Conversar em ${this.roomService.selectedRoom()?.display_name}`;
+  readonly inputPlaceholder = computed(() => {
+    if (this.currentRoom()) {
+      return this.currentRoom()?.type === "direct"
+        ? `Converse com @${this.currentRoom()?.display_name}`
+        : `Conversar em ${this.currentRoom()?.display_name}`;
     }
-    return "Selecione uma sala para começar a conversar";
+    return "Selecione uma sala";
   });
-
-  isSendDisabled = computed(
-    () => !this.newMessageContent().trim() && !this.newMessageFileUrl()
-  );
-
-  messagesDisplay = computed(() => {
+  readonly canSend = computed(() => {
+    const content = this.newMessageContent().trim();
+    const file = this.newMessageFileUrl();
+    return content.length > 0 || (file && file.trim().length > 0);
+  });
+  readonly messagesDisplay = computed(() => {
     return this.messages().map((message, index) => {
-      const previousMessage = this.messages()[index + 1];
+      const previousMessage = this.messages()[index - 1];
 
       const currentDate = new Date(message.created_at);
       currentDate.setHours(currentDate.getHours() + 3);
@@ -117,61 +125,100 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   });
 
-  constructor() {
-    this.route.paramMap.subscribe((params) => {
-      const roomId = params.get("roomId");
+  @ViewChild("messagesScroller") private scroller!: ElementRef<HTMLElement>;
+  @ViewChild("message") messageTextarea!: ElementRef<HTMLTextAreaElement>;
 
-      if (roomId) {
-        this.chatService.selectRoomId(roomId);
-        this.fetchMessages(roomId);
-      } else {
-        this.chatService.exitRoom();
-      }
-    });
+  constructor() {
+    this.setupWebSocketSubscription();
+
+    this.route.paramMap
+      .pipe(
+        map((params) => params.get("roomId")),
+        distinctUntilChanged(),
+        takeUntilDestroyed()
+      )
+      .subscribe((roomId) => {
+        if (this.roomService.selectedRoom.getValue()?.id === roomId!) return;
+
+        if (roomId) {
+          this.chatService.selectRoomId(roomId);
+        } else {
+          this.chatService.exitRoom();
+        }
+      });
+
+    this.roomService.selectedRoom
+      .pipe(distinctUntilChanged(), takeUntilDestroyed())
+      .subscribe((room) => {
+        this.currentRoom.set(room);
+        if (room) {
+          this.fetchMessages(room.id);
+        } else {
+          this.messages.set([]);
+        }
+      });
   }
 
-  ngOnInit() {
-    this.subscribeToMessages();
+  ngAfterViewChecked() {
+    this.scrollToBottom();
   }
 
   ngOnDestroy() {
-    this.roomService.selectRoom(null);
+    this.scrollToBottom();
     this.chatService.exitRoom();
+  }
+
+  private setupWebSocketSubscription(): void {
+    this.wsService
+      .connection()
+      .pipe(
+        filter(
+          (wsMessage: WSResponse) =>
+            wsMessage.type === "new_message" && !!wsMessage.data
+        ),
+        takeUntilDestroyed()
+      )
+      .subscribe((wsMessage: WSResponse) => {
+        const currentRoom = this.currentRoom();
+        if (
+          wsMessage.data.message.room_id &&
+          currentRoom &&
+          wsMessage.data.message.room_id !== currentRoom.id
+        ) {
+          return;
+        }
+
+        const message = {
+          ...wsMessage.data.message,
+          is_own_message: wsMessage.data.is_own_message,
+        };
+        this.messages.set([...(this.messages() ?? []), message]);
+      });
   }
 
   fetchMessages(roomId: string) {
     if (!roomId) return;
-
     this.loadingMessages.set(true);
-
     this.messageService
       .getMessages(roomId, this.page, this.pageSize)
-      .subscribe({
-        next: (result) => {
-          this.messages.set(result.data);
-        },
-        error: () => {},
-      });
-
-    this.loadingMessages.set(false);
-  }
-
-  subscribeToMessages(): void {
-    this.wsService.connection().subscribe({
-      next: (wsMessage: WSResponse) => {
-        if (wsMessage.type === "new_message" && wsMessage.data) {
-          const message = {
-            ...wsMessage.data.message,
-            is_own_message: wsMessage.data.is_own_message,
-          };
-          this.messages.set([message, ...(this.messages() ?? [])]);
-        }
-      },
-    });
+      .pipe(
+        tap((res) => {
+          this.messages.set(res.data.reverse());
+        }),
+        catchError((err) => {
+          console.error("Error fetching messages: ", err);
+          return EMPTY;
+        }),
+        finalize(() => this.loadingMessages.set(false))
+      )
+      .subscribe();
   }
 
   sendMessage(): void {
-    if (this.newMessageContent().trim() && this.roomService.selectedRoom()) {
+    if (
+      (this.newMessageContent().trim() || this.newMessageFileUrl()) &&
+      this.currentRoom()
+    ) {
       const replyMessageId = this.newMessageReply()?.id ?? null;
 
       const err = this.chatService.sendMessage(
@@ -191,7 +238,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   onEditMessage(data: SelectedMessageEdit): void {
-    if (data.content.trim() && this.roomService.selectedRoom()) {
+    if (data.content.trim() && this.currentRoom()) {
       const err = this.chatService.editMessage(data.id, data.content);
       if (err) {
         console.error("Error sending message: ", err);
@@ -242,5 +289,17 @@ export class ChatComponent implements OnInit, OnDestroy {
       month: "2-digit",
       day: "2-digit",
     });
+  }
+
+  private scrollToBottom() {
+    try {
+      const el = this.scroller.nativeElement;
+      const last = el.lastElementChild as HTMLElement;
+      if (last) {
+        last.scrollIntoView({ behavior: "instant", block: "end" });
+      } else {
+        el.scrollTop = el.scrollHeight;
+      }
+    } catch (e) {}
   }
 }

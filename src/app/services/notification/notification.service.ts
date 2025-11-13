@@ -1,7 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Subject } from "rxjs";
-import type { Message } from "../../models/message.models";
+import { filter, map, merge, share, Subject } from "rxjs";
 import type { NotificationsResponse } from "../../models/notification.models";
 import { WebsocketService } from "../chat/ws.service";
 
@@ -13,29 +12,19 @@ export class NotificationService {
   private wsService = inject(WebsocketService);
   private http = inject(HttpClient);
 
-  messageSubscription: Subject<Message> = new Subject();
-  notificationSubscription: Subject<true> = new Subject();
-
-  constructor() {
-    this.subscribeToNotifications();
-  }
-
-  private subscribeToNotifications(): void {
-    this.wsService.connection().subscribe({
-      next: (message) => {
-        if (!message.data) {
-          return;
-        }
-
-        if (message.type === "notification") {
-          this.notificationSubscription.next(true);
-        }
-        if (message.type === "message_notification") {
-          this.messageSubscription.next(message.data);
-        }
-      },
-    });
-  }
+  private manualRefresh$ = new Subject<void>();
+  readonly notifications$ = merge(
+    this.wsService.connection().pipe(
+      filter((msg) => msg.type === "notification"),
+      map(() => true)
+    ),
+    this.manualRefresh$
+  ).pipe(share());
+  readonly messages$ = this.wsService.connection().pipe(
+    filter((msg) => msg.type === "message_notification"),
+    map((message) => message.data),
+    share()
+  );
 
   getMyNotifications() {
     return this.http.get<NotificationsResponse>(this.notificationApiUrl);
@@ -62,5 +51,9 @@ export class NotificationService {
 
   markAllAsRead() {
     return this.http.put(`${this.notificationApiUrl}/read-all`, {});
+  }
+
+  reladNotifications() {
+    this.manualRefresh$.next();
   }
 }

@@ -1,7 +1,20 @@
 import { inject, Injectable, signal } from "@angular/core";
-import { tap, type Observable } from "rxjs";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
+import {
+  catchError,
+  Observable,
+  shareReplay,
+  Subject,
+  tap,
+  throwError,
+} from "rxjs";
 import type { WSMessage } from "../../models/message.models";
-import type { CreateRoomRequest, Room } from "../../models/rooms.models";
+import type {
+  CreateRoomRequest,
+  Room,
+  RoomDetails,
+  UpdateRoomRequest,
+} from "../../models/rooms.models";
 import { RoomService } from "../room/room.service";
 import { WebsocketService } from "./ws.service";
 
@@ -12,11 +25,28 @@ export class ChatService {
   private wsService = inject(WebsocketService);
   private roomService = inject(RoomService);
 
-  roomChanged = signal(0);
+  private roomsChanged$!: Observable<void>;
+  private rooms$ = new Subject<void>();
+  private currentRoom = signal(this.roomService.selectedRoom.value);
   typingUsers: string[] = [];
+
+  constructor() {
+    this.roomService.selectedRoom
+      .pipe(takeUntilDestroyed())
+      .subscribe((room) => this.currentRoom.set(room));
+  }
 
   ngOnDestroy() {
     this.wsService.close();
+  }
+
+  roomsChanged() {
+    if (!this.roomsChanged$) {
+      this.roomsChanged$ = this.rooms$.pipe(
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+    }
+    return this.roomsChanged$;
   }
 
   sendMessage(
@@ -24,13 +54,13 @@ export class ChatService {
     replyMessageId: string | null,
     fileUrl: string | null
   ) {
-    const roomId = this.roomService.selectedRoom()?.id;
+    const roomId = this.currentRoom()?.id;
 
     if (!roomId || !this.wsService.connected) {
       return "Not connected";
     }
 
-    if (content.trim().length > 0) {
+    if (content.trim().length > 0 || fileUrl) {
       const message: WSMessage = {
         type: "message",
         payload: {
@@ -49,7 +79,7 @@ export class ChatService {
   }
 
   editMessage(messageId: string, content: string) {
-    const roomId = this.roomService.selectedRoom()?.id;
+    const roomId = this.currentRoom()?.id;
 
     if (!roomId || !this.wsService.connected) {
       return "Not connected";
@@ -72,12 +102,12 @@ export class ChatService {
     return "Too small";
   }
 
-  selectRoom(room: Room) {
+  selectRoom(room: RoomDetails) {
     if (!this.wsService.connected) {
       return "Not connected";
     }
 
-    this.roomService.selectRoom(room);
+    this.roomService.selectedRoom.next(room);
     this.typingUsers = [];
 
     if (room) {
@@ -93,7 +123,7 @@ export class ChatService {
     this.roomService.getRoom(roomId).subscribe((room) => {
       if (!room) return;
 
-      this.roomService.selectRoom(room);
+      this.roomService.selectedRoom.next(room);
       this.typingUsers = [];
 
       this.wsService.sendMessage({
@@ -109,7 +139,7 @@ export class ChatService {
       tap((room) => {
         if (!room) return;
 
-        this.roomService.selectRoom(room);
+        this.roomService.selectedRoom.next(room);
         this.typingUsers = [];
 
         this.wsService.sendMessage({
@@ -124,11 +154,30 @@ export class ChatService {
     return this.roomService.createRoom(data).pipe(
       tap((data) => {
         if (data) {
-          this.roomChanged.update((n) => n + 1);
+          this.rooms$.next();
           this.selectRoom(data);
         } else {
           console.error("Error creating room:", data);
         }
+      })
+    );
+  }
+
+  updateRoom(data: Partial<UpdateRoomRequest>) {
+    const room = this.currentRoom();
+
+    if (!room) {
+      throw new Error("No room selected");
+    }
+
+    return this.roomService.updateRoom(room.id, data).pipe(
+      tap((room) => {
+        this.rooms$.next();
+        this.roomService.selectedRoom.next(room);
+      }),
+      catchError((err) => {
+        console.error("Error updating room:", err);
+        return throwError(() => err);
       })
     );
   }
@@ -143,10 +192,10 @@ export class ChatService {
       tap((room) => {
         if (!room) return;
 
-        this.roomService.selectRoom(room);
         this.roomService.joinRoom(room.id).subscribe({
           next: () => {
-            this.roomChanged.update((n) => n + 1);
+            this.reloadRooms();
+            this.roomService.selectedRoom.next(room);
             this.typingUsers = [];
 
             this.wsService.sendMessage(
@@ -162,7 +211,7 @@ export class ChatService {
   }
 
   leaveRoom() {
-    const roomId = this.roomService.selectedRoom()?.id;
+    const roomId = this.currentRoom()?.id;
 
     if (!roomId || !this.wsService.connected) {
       return "Not connected";
@@ -175,15 +224,15 @@ export class ChatService {
       })
     );
 
-    this.roomChanged.update((n) => n + 1);
+    this.rooms$.next();
     this.typingUsers = [];
 
-    this.roomService.selectRoom(null);
+    this.roomService.selectedRoom.next(null);
     return null;
   }
 
   exitRoom() {
-    const roomId = this.roomService.selectedRoom()?.id;
+    const roomId = this.currentRoom()?.id;
 
     if (!roomId || !this.wsService.connected) {
       return "Not connected";
@@ -199,8 +248,12 @@ export class ChatService {
     );
 
     this.typingUsers = [];
-    this.roomService.selectRoom(null);
+    this.roomService.selectedRoom.next(null);
 
     return null;
+  }
+
+  reloadRooms() {
+    this.rooms$.next();
   }
 }

@@ -3,7 +3,7 @@
   [modal]="true"
   [visible]="visible() || false"
   (visibleChange)="handleSetVisible($event)"
-  [closable]="!loading"
+  [closable]="!isLoading()"
   [breakpoints]="{ '960px': '50vw', '640px': '75vw', '480px': '95vw' }"
   [style]="{ width: '25rem' }"
   [dt]="dialogThemes.custom"
@@ -72,12 +72,12 @@
         label="Cancelar"
         severity="secondary"
         (click)="handleSetVisible(false)"
-        [disabled]="loading"
+        [disabled]="isLoading()"
       />
       <p-button
         label="Criar"
         type="submit"
-        [loading]="loading"
+        [loading]="isLoading()"
         fluid
       ></p-button>
     </div>

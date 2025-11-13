@@ -20,7 +20,7 @@
   </header>
 
   <div class="relative space-y-2 overflow-y-scroll h-full hide-scrollbar pb-2">
-    <ul class="flex flex-col sm:gap-1 sm:p-2">
+    <ul class="flex flex-col md:gap-1 md:p-2">
       @if (isLoading()) {
       <div>carregando...</div>
       } @else if (notifications().length === 0) {
@@ -33,7 +33,7 @@
       } @for(notification of notifications(); track notification.id) {
       <button
         type="button"
-        class="flex items-start w-full p-4 sm:rounded-md gap-4 text-start hover:bg-stone-700/50 group
+        class="flex items-start w-full p-4 md:rounded-md gap-4 text-start hover:bg-stone-700/50 group
         {{ notification.read_at ? 'bg-stone-800' : 'bg-stone-700' }}"
         (click)="handleClickNotification(notification)"
       >

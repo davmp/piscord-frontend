@@ -13,13 +13,13 @@ import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
 import { InputText } from "primeng/inputtext";
 import { SkeletonModule } from "primeng/skeleton";
-import type { PublicRoom } from "../../../../models/rooms.models";
-import { ChatService } from "../../../../services/chat/chat.service";
-import { RoomService } from "../../../../services/room/room.service";
-import * as themes from "../../../../themes/form.themes";
+import type { PublicRoom } from "../../../models/rooms.models";
+import { ChatService } from "../../../services/chat/chat.service";
+import { RoomService } from "../../../services/room/room.service";
+import * as themes from "../../../themes/form.themes";
 
 @Component({
-  selector: "app-find-room",
+  selector: "app-find-room-modal",
   imports: [
     DialogModule,
     ButtonModule,
@@ -28,45 +28,49 @@ import * as themes from "../../../../themes/form.themes";
     InputText,
     FormsModule,
   ],
-  templateUrl: "./find-room.component.html",
+  templateUrl: "./find-room-modal.component.html",
 })
-export class FindRoomComponent {
+export class FindRoomModalComponent {
   private router = inject(Router);
   private roomService = inject(RoomService);
   private chatService = inject(ChatService);
-  private roomChanged = this.chatService.roomChanged;
 
   visible = input<boolean>();
   setVisible = output<boolean>();
   search = signal("");
+  isLoading = signal(false);
+  rooms = signal([] as PublicRoom[]);
 
-  isLoading = false;
-  rooms: PublicRoom[] = [];
-
-  dialogThemes = themes.dialogThemes;
-  buttonThemes = themes.buttonThemes;
-  inputThemes = themes.inputThemes;
+  readonly dialogThemes = themes.dialogThemes;
+  readonly buttonThemes = themes.buttonThemes;
+  readonly inputThemes = themes.inputThemes;
 
   constructor() {
+    this.chatService.roomsChanged().subscribe(() => {
+      if (this.visible()) {
+        this.loadRooms(this.search());
+      }
+    });
+
     effect(() => {
       this.visible();
       if (this.visible()) {
-        this.roomChanged();
         this.loadRooms(this.search());
       }
     });
   }
 
   loadRooms(search: string) {
-    this.isLoading = true;
+    this.isLoading.set(true);
     this.roomService.getRooms(search).subscribe((rooms) => {
-      this.rooms = rooms.data;
+      this.rooms.set(rooms.data);
     });
-    this.isLoading = false;
+    this.isLoading.set(false);
   }
 
   handleJoinRoom(roomId: string) {
     this.chatService.joinRoom(roomId)?.subscribe((room) => {
+      this.chatService.reloadRooms();
       this.router.navigateByUrl(`/chat/${room.id}`);
     });
     this.handleSetVisible(false);

@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Observable, shareReplay, Subject, tap } from "rxjs";
+import { BehaviorSubject, Observable, shareReplay, tap } from "rxjs";
 import type {
   AuthResponse,
   LoginRequest,
@@ -21,7 +21,7 @@ export class AuthService {
   private readonly deviceService = inject(DeviceService);
   private http = inject(HttpClient);
 
-  profileChanged: Subject<Profile | null> = new Subject();
+  profileChanged = new BehaviorSubject<Profile | null>(this.getStoredProfile());
 
   getProfile() {
     return this.http.get<Profile>(this.profileApiUrl).pipe(
@@ -79,6 +79,14 @@ export class AuthService {
   getToken(): string | null {
     if (this.deviceService.isBrowser) {
       return localStorage.getItem("token");
+    }
+    return null;
+  }
+
+  private getStoredProfile(): Profile | null {
+    if (this.deviceService.isBrowser) {
+      const user = localStorage.getItem("user");
+      return user ? JSON.parse(user) : null;
     }
     return null;
   }

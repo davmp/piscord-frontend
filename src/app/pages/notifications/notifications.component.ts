@@ -1,9 +1,11 @@
 import { Component, inject, signal } from "@angular/core";
+import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Router, RouterLink } from "@angular/router";
 import { Avatar } from "primeng/avatar";
 import type { Notification } from "../../models/notification.models";
 import { NotificationService } from "../../services/notification/notification.service";
 import * as formThemes from "../../themes/form.themes";
+import { formatDate } from "../../utils/date-formatter";
 
 @Component({
   selector: "app-notifications",
@@ -22,9 +24,9 @@ export class NotificationsComponent {
   constructor() {
     this.loadNotifications();
 
-    this.notificationService.notificationSubscription.subscribe(() =>
-      this.loadNotifications()
-    );
+    this.notificationService.notifications$
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.loadNotifications());
   }
 
   loadNotifications() {
@@ -41,14 +43,15 @@ export class NotificationsComponent {
     this.handleReadNotification(notification.id);
 
     if (notification.link) {
-      this.router.navigate([notification.link]);
+      this.router.navigateByUrl(notification.link);
     }
   }
 
   handleReadNotification(notificationId: string) {
     this.notificationService.markAsRead(notificationId).subscribe({
       next: () => {
-        this.notificationService.notificationSubscription.next(true);
+        console.log("Notification marked as read");
+        this.notificationService.reladNotifications();
       },
       error: (err) => {
         console.error("Error reading notification: ", err);
@@ -59,7 +62,7 @@ export class NotificationsComponent {
   handleReadAllNotifications() {
     this.notificationService.markAllAsRead().subscribe({
       next: () => {
-        this.notificationService.notificationSubscription.next(true);
+        this.notificationService.reladNotifications();
       },
       error: (err) => {
         console.error("Error reading alll notifications: ", err);
@@ -70,7 +73,7 @@ export class NotificationsComponent {
   handleDeleteNotification(notificationId: string) {
     this.notificationService.deleteNotification(notificationId).subscribe({
       next: () => {
-        this.notificationService.notificationSubscription.next(true);
+        this.notificationService.reladNotifications();
       },
       error: (err) => {
         console.error("Error deleting notification: ", err);
@@ -81,7 +84,7 @@ export class NotificationsComponent {
   handleDeleteAllNotifications() {
     this.notificationService.deleteAllMyNotifications().subscribe({
       next: () => {
-        this.notificationService.notificationSubscription.next(true);
+        this.notificationService.reladNotifications();
       },
       error: (err) => {
         console.error("Error deleting all notifications: ", err);
@@ -95,13 +98,9 @@ export class NotificationsComponent {
     const diffDays = now.getDate() - date.getDate();
 
     if (diffDays < 1) {
-      return date.toLocaleTimeString(["pt-BR"], {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
+      return formatDate(dateStr);
     } else {
-      return date.toLocaleDateString(["pt-BR"], {
+      return formatDate(dateStr, {
         day: "2-digit",
         month: "2-digit",
         year: "2-digit",

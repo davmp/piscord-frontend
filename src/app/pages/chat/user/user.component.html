@@ -1,6 +1,6 @@
 <div class="w-full h-screen flex flex-col bg-stone-800">
   <div
-    class="w-full h-[57px] bg-stone-800 border-b flex items-center border-stone-700/80 px-4"
+    class="w-full min-h-[57px] fixed top-0 right-0 left-0 bottom-auto md:relative bg-stone-800 z-20 border-b flex items-center justify-between border-stone-700/80 px-4"
   >
     <div class="h-full flex items-center space-x-2">
       @if (isMobile()) {
@@ -44,7 +44,7 @@
   </div>
 
   <section
-    class="relative w-full h-full overflow-y-scroll flex flex-col-reverse hide-scrollbar"
+    class="relative w-full pt-16 pb-18 md:py-0 h-fit md:h-full md:overflow-y-scroll flex flex-col-reverse hide-scrollbar"
   >
     <ul class="flex flex-col-reverse w-full pb-4">
       <div
@@ -54,39 +54,90 @@
         Nenhuma mensagem ainda. Seja o primeiro a enviar uma!
       </div>
     </ul>
+    @if (isMobile()) {
+    <div
+      class="fixed top-auto bottom-0 left-0 right-0 w-full flex items-center bg-stone-800 border-t border-t-neutral-700/50 h-18 min-h-fit max-h-32 p-2 pb-4 gap-2"
+    >
+      <div
+        class="w-full flex items-center bg-stone-700/40 max-h-32 overflow-y-scroll hide-scrollbar rounded-2xl min-h-[47px]"
+      >
+        <p-button
+          icon="pi pi-plus"
+          [dt]="buttonThemes.ghost"
+          styleClass="bg-transparent!"
+          (click)="op.toggle($event)"
+        ></p-button>
+        @if (newMessageFileUrl()) {
+        <div
+          class="flex items-center gap-2 px-2 py-1 rounded-full border border-stone-600 text-stone-300 mt-1"
+        >
+          <img [src]="newMessageFileUrl()" class="size-6 object-contain" />
+          <button
+            class="text-stone-400 hover:text-stone-200"
+            (click)="newMessageFileUrl.set(null); op.hide()"
+          >
+            <i class="pi pi-times text-xs!"></i>
+          </button>
+        </div>
+        }
+        <p-popover #op [dt]="popoverThemes.ghost"
+          ><div>
+            <span
+              class="font-medium text-surface-900 dark:text-surface-0 block mb-2"
+              >Adicione uma imagem</span
+            >
+            <p-inputgroup>
+              <p-inputgroup-addon styleClass="bg-stone-800! border-stone-600!">
+                www
+              </p-inputgroup-addon>
+              <input
+                pInputText
+                fluid
+                [(ngModel)]="tempFileUrl"
+                [dt]="inputThemes.outlined"
+              />
+              <p-inputgroup-addon styleClass="border-[#4752C4]!">
+                <p-button
+                  icon="pi pi-plus"
+                  [dt]="buttonThemes.primary"
+                  (click)="
+                    newMessageFileUrl.set(tempFileUrl());
+                    tempFileUrl.set(null);
+                    op.hide()
+                  "
+                />
+              </p-inputgroup-addon>
+            </p-inputgroup>
+          </div>
+        </p-popover>
+        <textarea
+          #message
+          pTextarea
+          rows="1"
+          [maxlength]="500"
+          fluid
+          placeholder="Converse com {{ user()?.username }}"
+          [autoResize]="true"
+          [pAutoFocus]="true"
+          [(ngModel)]="newMessageContent"
+          [dt]="inputThemes.outlined"
+          [style]="{ border: '0', backgroundColor: 'transparent' }"
+          class="flex-1!"
+        ></textarea>
+      </div>
+      <p-button
+        icon="pi pi-send"
+        [dt]="buttonThemes.primary"
+        styleClass="rounded-full!"
+        (click)="sendMessage()"
+        [disabled]="!canSend()"
+      ></p-button>
+    </div>
+    }
   </section>
 
-  @if (isMobile()) {
-  <div
-    class="w-full flex items-center border-t border-t-neutral-700/50 h-18 min-h-fit max-h-32 p-2 pb-4 gap-2"
-  >
-    <div
-      class="w-full flex items-center bg-stone-700/40 max-h-32 overflow-y-scroll hide-scrollbar rounded-2xl min-h-[47px]"
-    >
-      <textarea
-        pTextarea
-        rows="1"
-        [maxlength]="500"
-        fluid
-        [placeholder]="inputPlaceholder"
-        [autoResize]="true"
-        [pAutoFocus]="true"
-        [(ngModel)]="newMessageContent"
-        [dt]="inputThemes.outlined"
-        [style]="{ border: '0', backgroundColor: 'transparent' }"
-        class="flex-1!"
-      ></textarea>
-    </div>
-    <p-button
-      icon="pi pi-send"
-      [dt]="buttonThemes.primary"
-      styleClass="rounded-full!"
-      (click)="sendMessage()"
-      [disabled]="isSendDisabled()"
-    ></p-button>
-  </div>
-  } @else {
-  <div class="w-full p-2">
+  @if (!isMobile()) {
+  <div class="w-full p-2 pt-0">
     <div
       class="w-full flex items-start bg-stone-600/20 border border-stone-700 min-h-14 rounded-lg pt-1.5 pl-2"
     >
@@ -145,13 +196,11 @@
         rows="1"
         [maxlength]="500"
         fluid
-        [placeholder]="inputPlaceholder"
+        placeholder="Converse com {{ user()?.username }}"
         [pAutoFocus]="true"
         [autoResize]="true"
         [(ngModel)]="newMessageContent"
-        (keydown.enter)="
-          $event.preventDefault(); !isSendDisabled() && sendMessage()
-        "
+        (keydown.enter)="$event.preventDefault(); canSend() && sendMessage()"
         [dt]="inputThemes.outlined"
         [style]="{ border: '0', backgroundColor: 'transparent' }"
       ></textarea>
