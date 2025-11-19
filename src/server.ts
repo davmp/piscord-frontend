@@ -41,10 +41,12 @@ app.use(
 /**
  * Handle backend requests by forwarding to Nginx.
  */
+const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
+
 app.use(
   "/api",
   createProxyMiddleware({
-    target: "http://backend:8000/api",
+    target: backendUrl,
     changeOrigin: true,
     pathRewrite: { "^/api": "" },
     ws: true,
