@@ -27,8 +27,8 @@ Essas variáveis podem ser executadas ao executar seu container.
 
 | Variável | Descrição                                       | Exemplo            |
 | -------- | ----------------------------------------------- | ------------------ |
-| API_URL  | URL do backend para conexões REST               | http://<host>/api  |
-| WS_URL   | URL para conexão WebSocket em tempo real        | ws://<host>/api/ws |
+| API_URL  | URL do backend para conexões REST               | http://_host_/api  |
+| WS_URL   | URL para conexão WebSocket em tempo real        | ws://_host_/api/ws |
 | PORT     | Porta que o frontend irá escutar (padrão: 4000) | 4000               |
 
 <!-- | NODE_ENV | Ambiente de execução (`production`, `development`) | production         | -->
