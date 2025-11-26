@@ -33,6 +33,8 @@ export class WebsocketService {
   connected = false;
 
   private get wsUrl() {
+    const wsUrl = process.env["WS_URL"];
+    console.log(`WS_URL: ${wsUrl} | isBrowser: ${this.deviceService.isBrowser}`);
     return process.env["WS_URL"] ?? (this.deviceService.isBrowser && window.location)
       ? `ws://${window.location.host}/api/ws`
       : null;
