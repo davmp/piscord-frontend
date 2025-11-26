@@ -4,6 +4,7 @@ import {
   EMPTY,
   filter,
   finalize,
+  map,
   Observable,
   retry,
   shareReplay,
@@ -12,6 +13,7 @@ import {
 } from "rxjs";
 import { webSocket, WebSocketSubject } from "rxjs/webSocket";
 import { DeviceService } from "../device.service";
+import { EnvService } from "../env.service";
 import { AuthService } from "../user/auth/auth.service";
 
 @Injectable({
@@ -20,6 +22,7 @@ import { AuthService } from "../user/auth/auth.service";
 export class WebsocketService {
   private authService = inject(AuthService);
   private deviceService = inject(DeviceService);
+  private envService = inject(EnvService);
 
   private socket$!: WebSocketSubject<any>;
   connection$ = this.deviceService.isBrowser
@@ -29,44 +32,55 @@ export class WebsocketService {
         shareReplay({ bufferSize: 1, refCount: true })
       )
     : EMPTY;
+  wsUrl$ = this.envService
+    .loadEnv()
+    .pipe(
+      map(
+        (env) =>
+          env.wsUrl ??
+          (this.deviceService.isBrowser && window.location
+            ? `ws://${window.location.host}/api/ws`
+            : null)
+      )
+    );
 
   connected = false;
 
-  private get wsUrl() {
-    const wsUrl = process.env["WS_URL"];
-    console.log(`WS_URL: ${wsUrl} | isBrowser: ${this.deviceService.isBrowser}`);
-    return process.env["WS_URL"] ?? (this.deviceService.isBrowser && window.location)
-      ? `ws://${window.location.host}/api/ws`
-      : null;
-  }
-
   private createConnection(): Observable<any> {
-    if (
-      !this.deviceService.isBrowser ||
-      !this.wsUrl ||
-      !this.authService.isAuthenticated()
-    ) {
+    if (!this.deviceService.isBrowser || !this.authService.isAuthenticated()) {
       return EMPTY;
     }
 
-    return new Observable<any>((subscriber) => {
-      if (!this.socket$ || this.socket$.closed) {
-        console.log("Creating new WebSocket connection");
-        this.socket$ = webSocket({
-          url: `${this.wsUrl}?at=${this.authService.getToken()}`,
-          openObserver: { next: () => (this.connected = true) },
-          closeObserver: { next: () => (this.connected = false) },
-          serializer: (msg) => JSON.stringify(msg),
-          deserializer: (msg) => JSON.parse(msg.data),
-        });
-      }
+    return this.wsUrl$.pipe(
+      filter((url) => !!url),
+      switchMap((url) => {
+        const finalUrl = `${url}?at=${this.authService.getToken()}`;
 
-      const sub = this.socket$.subscribe(subscriber);
-      return () => sub.unsubscribe();
-    }).pipe(
-      retry({ delay: (_, count) => timer(Math.min(1000 * 2 ** count, 30000)) }),
+        return new Observable<any>((subscriber) => {
+          if (!this.socket$ || this.socket$.closed) {
+            console.log("Creating new WebSocket connection:", finalUrl);
+
+            this.socket$ = webSocket({
+              url: finalUrl,
+              openObserver: { next: () => (this.connected = true) },
+              closeObserver: { next: () => (this.connected = false) },
+              serializer: (msg) => JSON.stringify(msg),
+              deserializer: (msg) => JSON.parse(msg.data),
+            });
+          }
+
+          const sub = this.socket$.subscribe(subscriber);
+          return () => sub.unsubscribe();
+        });
+      }),
+      retry({
+        delay: (_, count) => timer(Math.min(1000 * 2 ** count, 30000)),
+      }),
       finalize(() => console.log("WebSocket finalized")),
-      catchError(() => EMPTY)
+      catchError((err) => {
+        console.error("WebSocket error:", err);
+        return EMPTY;
+      })
     );
   }
 

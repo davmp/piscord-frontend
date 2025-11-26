@@ -76,6 +76,15 @@ if (isMainModule(import.meta.url)) {
   });
 }
 
+const wsUrl = process.env["WS_URL"] || null;
+
+app.get('/env.json', (req, res) => {
+  res.json({
+    apiUrl: backendUrl,
+    wsUrl: wsUrl,
+  });
+});
+
 /**
  * Request handler used by the Angular CLI (for dev-server and during build) or Firebase Cloud Functions.
  */
