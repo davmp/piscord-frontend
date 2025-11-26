@@ -13,7 +13,7 @@ RUN pnpm run build --configuration production --base-href /
 FROM node:20-alpine AS runner
 
 ENV NODE_ENV=production
-ENV PORT=4200 
+ENV PORT=4000 
 
 WORKDIR /usr/src/app
 

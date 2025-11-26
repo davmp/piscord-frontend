@@ -50,7 +50,6 @@ export class NotificationsComponent {
   handleReadNotification(notificationId: string) {
     this.notificationService.markAsRead(notificationId).subscribe({
       next: () => {
-        console.log("Notification marked as read");
         this.notificationService.reladNotifications();
       },
       error: (err) => {
