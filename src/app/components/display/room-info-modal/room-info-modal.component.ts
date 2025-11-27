@@ -6,6 +6,7 @@ import {
   output,
   signal,
 } from "@angular/core";
+import { Router } from "express";
 import { Avatar } from "primeng/avatar";
 import { Button } from "primeng/button";
 import { Dialog } from "primeng/dialog";
@@ -28,6 +29,7 @@ export class RoomInfoModalComponent {
   private chatService = inject(ChatService);
   private roomService = inject(RoomService);
   private deviceService = inject(DeviceService);
+  private router = inject(Router);
 
   room = input<RoomDetails | null>(null);
   visible = signal(false);
@@ -84,6 +86,7 @@ export class RoomInfoModalComponent {
     if (room) {
       this.roomService.leaveRoom(room.id).subscribe(() => {
         this.chatService.leaveRoom();
+        this.router.navigate([]);
         this.visible.set(false);
         this.setEditRoom?.emit(false);
       });

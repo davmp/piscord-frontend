@@ -146,10 +146,12 @@ export class SidebarComponent {
     this.roomService.leaveRoom(room.id).subscribe({
       next: () => {
         this.chatService.leaveRoom();
-        this.router.navigate([]);
+        if (this.currentRoom()?.id === room.id) {
+          this.router.navigate([]);
+        }
       },
       error: (err) => {
-        console.error("Error leaving room: ", room);
+        console.error("Error leaving room: ", err);
       },
     });
   }
