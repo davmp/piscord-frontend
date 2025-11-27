@@ -146,7 +146,10 @@ export class SidebarComponent {
     this.roomService.leaveRoom(room.id).subscribe({
       next: () => {
         this.chatService.leaveRoom();
-        if (this.currentRoom()?.id === room.id) {
+        if (
+          this.currentRoom()?.id === room.id &&
+          this.deviceService.isBrowser
+        ) {
           this.router.navigate([]);
         }
       },
