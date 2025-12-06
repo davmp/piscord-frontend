@@ -31,6 +31,7 @@ export class MessageComponent {
   isOwnMessage = input(false);
   isSelected = input(false);
   onEditMessage = output<SelectedMessageEdit>();
+  onDeleteMessage = output<string>();
   onSelectReplyMessage = output<MessagePreview>();
 
   newMessageContent = signal("");
@@ -78,6 +79,14 @@ export class MessageComponent {
       id: message.id,
       content: this.newMessageContent(),
     });
+  }
+
+  handleDeleteMessage() {
+    const message = this.message();
+
+    if (!message) return;
+
+    this.onDeleteMessage.emit(message.id);
   }
 
   formattedDate() {

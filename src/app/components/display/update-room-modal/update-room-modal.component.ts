@@ -4,23 +4,22 @@ import {
   inject,
   input,
   output,
-  signal,
+  signal
 } from "@angular/core";
-import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import {
   FormBuilder,
   ReactiveFormsModule,
   Validators,
   type FormGroup,
 } from "@angular/forms";
-import { Button } from "primeng/button";
-import { Dialog } from "primeng/dialog";
-import { InputNumber } from "primeng/inputnumber";
-import { InputText } from "primeng/inputtext";
+import { ButtonModule } from "primeng/button";
+import { DialogModule } from "primeng/dialog";
+import { InputNumberModule } from "primeng/inputnumber";
+import { InputTextModule } from "primeng/inputtext";
 import { Message } from "primeng/message";
-import { Textarea } from "primeng/textarea";
-import { catchError, EMPTY, finalize, startWith, tap } from "rxjs";
-import type { UpdateRoomRequest } from "../../../models/rooms.models";
+import { TextareaModule } from "primeng/textarea";
+import { catchError, EMPTY, finalize, of, startWith, tap } from "rxjs";
+import type { RoomDetails, UpdateRoomRequest } from "../../../models/rooms.models";
 import { ChatService } from "../../../services/chat/chat.service";
 import { RoomService } from "../../../services/room/room.service";
 import * as themes from "../../../themes/form.themes";
@@ -28,12 +27,12 @@ import * as themes from "../../../themes/form.themes";
 @Component({
   selector: "app-update-room-modal",
   imports: [
-    Dialog,
-    InputText,
-    Textarea,
-    InputNumber,
-    Button,
     Message,
+    DialogModule,
+    InputTextModule,
+    TextareaModule,
+    InputNumberModule,
+    ButtonModule,
     ReactiveFormsModule,
   ],
   templateUrl: "./update-room-modal.component.html",
@@ -49,42 +48,41 @@ export class UpdateRoomModalComponent {
   isLoading = signal(false);
   success = signal(false);
   errorMessage = signal(undefined as string | undefined);
-  room = signal(this.roomService.selectedRoom.value);
+  room = signal<RoomDetails | null>(null);
 
   readonly buttonThemes = themes.buttonThemes;
   readonly inputThemes = themes.inputThemes;
   readonly dialogThemes = themes.dialogThemes;
 
   constructor() {
-    this.roomService.selectedRoom
-      .pipe(takeUntilDestroyed())
-      .subscribe((room) => this.room.set(room));
-
     this.form = this.formBuilder.group({
       name: [this.room()?.displayName || "", Validators.required],
       description: [this.room()?.description || ""],
       picture: [this.room()?.picture],
-      maxMembers: [
-        this.room()?.maxMembers,
-        [Validators.min(0), Validators.max(200)],
-      ],
-      removeMembers: [[] as string[]],
+      maxMembers: [20, [Validators.min(2), Validators.max(100)]],
     });
 
     effect(() => {
-      this.room();
+      const selectedRoom = this.roomService.selectedRoom.value;
 
-      this.form = this.formBuilder.group({
-        name: [this.room()?.displayName || "", Validators.required],
-        description: [this.room()?.description || ""],
-        picture: [this.room()?.picture],
-        maxMembers: [
-          this.room()?.maxMembers,
-          [Validators.min(0), Validators.max(200)],
-        ],
-        removeMembers: [[] as string[]],
-      });
-    });
+      if (!selectedRoom || !this.visible()) {
+        return;
+      }
+
+      this.roomService.getRoom(selectedRoom.id).pipe(
+        tap((room) => {
+          this.room.set(room);
+          this.form.get("name")?.setValue(room?.displayName);
+          this.form.get("description")?.setValue(room?.description);
+          this.form.get("picture")?.setValue(room?.picture);
+          this.form.get("maxMembers")?.setValue(room?.maxMembers);
+        }),
+        catchError(() => {
+          this.setVisible.emit(false);
+          return of(null);
+        })
+      ).subscribe();
+    })
   }
 
   updateRoom() {
@@ -97,7 +95,10 @@ export class UpdateRoomModalComponent {
     this.chatService
       .updateRoom(dat)
       .pipe(
-        tap(() => this.success.set(true)),
+        tap((room) => {
+          this.success.set(true)
+          this.roomService.roomUpdated.next(room);
+        }),
         finalize(() => this.isLoading.set(false)),
         catchError((err) => {
           this.errorMessage.set(
@@ -117,7 +118,7 @@ export class UpdateRoomModalComponent {
   }
 
   getChangedFields(): Partial<UpdateRoomRequest> {
-    const room = this.roomService.selectedRoom.value;
+    const room = this.room();
     const dat: Partial<UpdateRoomRequest> = {};
 
     if (this.form.get("name")?.value !== room?.displayName) {
@@ -131,9 +132,6 @@ export class UpdateRoomModalComponent {
     }
     if (this.form.get("maxMembers")?.value !== room?.maxMembers) {
       dat.maxMembers = this.form.get("maxMembers")?.value;
-    }
-    if (this.form.get("removeMembers")) {
-      dat.removeMembers = this.form.get("removeMembers")?.value;
     }
 
     return dat;

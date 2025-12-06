@@ -13,6 +13,7 @@ import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
 import { InputText } from "primeng/inputtext";
 import { SkeletonModule } from "primeng/skeleton";
+import { tap } from "rxjs";
 import type { PublicRoom } from "../../../models/rooms.models";
 import { ChatService } from "../../../services/chat/chat.service";
 import { RoomService } from "../../../services/room/room.service";
@@ -68,11 +69,12 @@ export class FindRoomModalComponent {
     this.isLoading.set(false);
   }
 
-  handleJoinRoom(roomId: string) {
-    this.chatService.joinRoom(roomId)?.subscribe((room) => {
-      this.chatService.reloadRooms();
-      this.router.navigateByUrl(`/chat/${room.id}`);
-    });
+  handleJoinRoom(room: PublicRoom) {
+    this.chatService.joinRoom(room).pipe(
+      tap(() => {
+        this.router.navigateByUrl(`/chat/${room.id}`);
+      })
+    ).subscribe();
     this.handleSetVisible(false);
   }
 

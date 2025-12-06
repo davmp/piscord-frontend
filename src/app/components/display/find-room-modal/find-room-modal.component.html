@@ -64,7 +64,7 @@
           <span
             class="text-xs text-stone-400 text-start text-nowrap truncate"
             >{{
-              room.memberCount + "/" + (room.maxMembers ?? 50) + " membros"
+              room.membersCount + "/" + (room.maxMembers ?? 50) + " membros"
             }}</span
           >
         </div>
@@ -85,7 +85,7 @@
         label="Entrar"
         styleClass="ml-auto! h-8 px-2! text-white! rounded-sm!"
         [dt]="buttonThemes.primary"
-        (click)="handleJoinRoom(room.id)"
+        (click)="handleJoinRoom(room)"
       >
       </p-button>
       }

@@ -50,9 +50,17 @@ export class SidebarComponent {
       .pipe(takeUntilDestroyed())
       .subscribe((room) => this.currentRoom.set(room));
 
-    this.roomService.roomCreated
+    this.roomService.newRoom
       .pipe(takeUntilDestroyed())
-      .subscribe((room) => this.rooms.update((rooms) => [room, ...rooms]));
+      .subscribe((room) => this.rooms.update((rooms) => [...rooms, room]));
+
+    this.roomService.roomUpdated
+      .pipe(takeUntilDestroyed())
+      .subscribe((room) => this.rooms.update((rooms) => rooms.map((r) => r.id === room.id ? room : r)));
+
+    this.roomService.removeRoom
+      .pipe(takeUntilDestroyed())
+      .subscribe((roomId) => this.rooms.update((rooms) => rooms.filter((room) => room.id !== roomId)));
 
     this.notificationService.notifications$
       .pipe(takeUntilDestroyed())
@@ -145,24 +153,26 @@ export class SidebarComponent {
   }
 
   onSelectRoom(room: Room) {
-    this.chatService.selectRoomId(room.id);
+    this.chatService.selectRoomId(room.id).subscribe();
   }
 
   onLeaveRoom(room: Room) {
-    this.roomService.leaveRoom(room.id).subscribe({
-      next: () => {
-        this.chatService.leaveRoom();
+    this.roomService.leaveRoom(room.id).pipe(
+      tap(() => {
+        this.chatService.leaveRoom().subscribe();
+        this.roomService.removeRoom.next(room.id);
         if (
           this.currentRoom()?.id === room.id &&
           this.deviceService.isBrowser
         ) {
           this.router.navigate([]);
         }
-      },
-      error: (err) => {
+      }),
+      catchError((err) => {
         console.error("Error leaving room: ", err);
-      },
-    });
+        return EMPTY;
+      }),
+    ).subscribe();
   }
 
   handleOpenModal(type: "createRoom" | "findRooms") {

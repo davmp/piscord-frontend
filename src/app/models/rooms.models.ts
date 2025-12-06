@@ -5,12 +5,15 @@ export interface GetRooms<T = Room> {
   total: number;
 }
 
+export type RoomType = "PUBLIC" | "PRIVATE" | "DIRECT";
+
 export interface Room {
   id: string;
   displayName: string;
   description?: string;
   picture?: string;
-  type: "public" | "private" | "direct";
+  type: RoomType;
+  isAdmin: boolean;
   lastMessage?: MessagePreview;
 }
 
@@ -19,7 +22,7 @@ export interface RoomDetails {
   displayName: string;
   description?: string;
   picture?: string;
-  type: "public" | "private" | "direct";
+  type: RoomType;
   maxMembers?: number;
   members: RoomMember[];
   isMember: boolean;
@@ -34,7 +37,7 @@ export interface DirectRoomDetails extends RoomDetails {
   displayName: string;
   description?: string;
   picture?: string;
-  type: "private";
+  type: "PRIVATE";
   maxMembers?: 2;
   members: RoomMember[];
   admins: [];
@@ -51,10 +54,11 @@ export interface PublicRoom {
   description?: string;
   picture?: string;
   updatedAt: Date;
-  type: "public";
+  type: "PUBLIC";
   maxMembers?: number;
-  memberCount: number;
+  membersCount: number;
   ownerId: string;
+  isAdmin: boolean;
   isMember: boolean;
 }
 
@@ -62,7 +66,7 @@ export interface CreateRoomRequest {
   name?: string;
   description?: string;
   picture?: string;
-  type: "public" | "private" | "direct";
+  type: RoomType;
   members: string[];
   admins: string[];
   maxMembers: number;
@@ -72,8 +76,6 @@ export interface UpdateRoomRequest {
   name?: string;
   description?: string;
   picture?: string;
-  addMembers: string[];
-  removeMembers: string[];
   maxMembers?: number;
 }
 

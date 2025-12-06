@@ -95,7 +95,7 @@
       >
         {{ message()?.content }}
         @if (!!message()?.editedAt) {
-        <span class="text-xs text-neutral-400">(editado)</span>
+        <span class="text-xs text-stone-400">(editado)</span>
         }
       </p>
       } @if (message()?.fileUrl) {
@@ -149,11 +149,13 @@
       ></textarea>
       } @else {
       <p
-        class="w-fit font-normal text-stone-300 break-words break-all whitespace-pre-wrap hyphens-auto"
+        class="w-fit font-normal text-stone-300 break-words break-all whitespace-pre-wrap hyphens-auto {{
+          message()?.isDeleted ? 'italic text-stone-500' : ''
+        }}"
       >
         {{ message()?.content }}
-        @if (!!message()?.editedAt) {
-        <span class="text-xs text-neutral-400">(editado)</span>
+        @if (!message()?.isDeleted && !!message()?.editedAt) {
+        <span class="text-xs text-stone-400">(editado)</span>
         }
       </p>
       } @if (message()?.fileUrl) {
@@ -175,6 +177,13 @@
       [class.opacity-100]="showMobileActions()"
     >
       @if (isOwnMessage()) {
+      <button
+        type="button"
+        class="size-7 p-1 rounded-md hover:bg-stone-700/40 hover:text-stone-300 grid place-content-center"
+        (click)="handleDeleteMessage()"
+      >
+        <i class="pi pi-trash"></i>
+      </button>
       <button
         type="button"
         class="size-7 p-1 rounded-md hover:bg-stone-700/40 hover:text-stone-300 grid place-content-center"

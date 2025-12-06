@@ -90,7 +90,7 @@
           <ul class="flex-1 h-full relative space-y-1">
             @if (room()?.members?.length! <= 0) {
             <li class="absolute inset-0 grid place-content-center">
-              <span class="text-neutral-400">Nenhum membro ainda.</span>
+              <span class="text-stone-400">Nenhum membro ainda.</span>
             </li>
             } @for (member of membersDisplay(); track member.userId) {
             <app-user-popover [userId]="member.userId" [isOwn]="member.isMe">
@@ -123,7 +123,7 @@
                   @if (!member.isMe && room()?.isAdmin && !member.isAdmin) {
                   <p-button
                     class="grid place-content-center hover:text-stone-200 text-stone-500"
-                    (click)="handleRemoveMember(member.userId)"
+                    (click)="handleKickMember(member.userId)"
                     severity="danger"
                     icon="pi pi-trash"
                     [dt]="buttonThemes.outlined"
@@ -247,7 +247,7 @@
         </li>
         } @else if (!room() || room()?.members?.length! <= 0) {
         <li class="absolute inset-0 grid place-content-center">
-          <span class="text-neutral-400">Nenhum membro ainda.</span>
+          <span class="text-stone-400">Nenhum membro ainda.</span>
         </li>
         } @for (member of membersDisplay(); track member.userId) {
         <app-user-popover [userId]="member.userId" [isOwn]="member.isMe">
@@ -280,7 +280,7 @@
               @if (!member.isMe && room()?.isAdmin && !member.isAdmin) {
               <p-button
                 class="grid place-content-center hover:text-stone-200 text-stone-500"
-                (click)="handleRemoveMember(member.userId)"
+                (click)="handleKickMember(member.userId)"
                 severity="danger"
                 icon="pi pi-trash"
                 [dt]="buttonThemes.outlined"

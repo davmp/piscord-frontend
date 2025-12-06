@@ -81,7 +81,7 @@ export class ChatComponent implements OnDestroy {
 
   readonly inputPlaceholder = computed(() => {
     if (this.currentRoom()) {
-      return this.currentRoom()?.type === "direct"
+      return this.currentRoom()?.type === "DIRECT"
         ? `Converse com @${this.currentRoom()?.displayName}`
         : `Conversar em ${this.currentRoom()?.displayName}`;
     }
@@ -138,9 +138,11 @@ export class ChatComponent implements OnDestroy {
         if (this.roomService.selectedRoom.getValue()?.id === roomId!) return;
 
         if (roomId) {
-          this.chatService.selectRoomId(roomId);
+          this.chatService.selectRoomId(roomId).subscribe({
+            error: () => this.chatService.exitRoom().subscribe()
+          });
         } else {
-          this.chatService.exitRoom();
+          this.chatService.exitRoom().subscribe();
         }
       });
 
@@ -162,7 +164,7 @@ export class ChatComponent implements OnDestroy {
 
   ngOnDestroy() {
     this.scrollToBottom();
-    this.chatService.exitRoom();
+    this.chatService.exitRoom().subscribe();
   }
 
   private setupWebSocketSubscription(): void {
@@ -224,15 +226,14 @@ export class ChatComponent implements OnDestroy {
       (this.newMessageContent().trim() || this.newMessageFileUrl()) &&
       this.currentRoom()
     ) {
-      const err = this.chatService.sendMessage({
+      this.chatService.sendMessage({
         content: this.newMessageContent(),
         fileUrl: this.newMessageFileUrl(),
         replyTo: this.newMessageReply()
+      }).subscribe({
+        error: (err) => console.error("Error sending message: ", err)
       });
-      if (err) {
-        console.error("Error sending message: ", err);
-        return;
-      }
+
       this.newMessageContent.set("");
       this.newMessageFileUrl.set(null);
       this.newMessageReply.set(null);
@@ -242,21 +243,44 @@ export class ChatComponent implements OnDestroy {
 
   onEditMessage(data: SelectedMessageEdit): void {
     if (data.content.trim() && this.currentRoom()) {
-      const err = this.chatService.editMessage(data.id, data.content);
-      if (err) {
-        console.error("Error sending message: ", err);
-        return;
-      }
+      this.chatService.editMessage(data.id, data.content).subscribe({
+        next: () => {
+          this.messages.set(
+            this.messages().map((message) => {
+              if (data.id === message.id) {
+                message.content = data.content;
+                message.editedAt = undefined;
+              }
+              return message;
+            })
+          );
+        },
+        error: (err) => console.error("Error sending message: ", err)
+      });
+    }
+  }
 
-      this.messages.set(
-        this.messages().map((message) => {
-          if (data.id === message.id) {
-            message.content = data.content;
-            message.editedAt = undefined;
-          }
-          return message;
+  onDeleteMessage(messageId: string): void {
+    if (this.currentRoom()) {
+      this.chatService.deleteMessage(messageId).pipe(
+        tap(() => {
+          this.messages.set(
+            this.messages().map((message) => {
+              if (messageId === message.id) {
+                message.content = "Essa mensagem foi apagada";
+                message.fileUrl = undefined;
+                message.updatedAt = new Date().toLocaleDateString();
+                message.isDeleted = true;
+              }
+              return message;
+            })
+          );
+        }),
+        catchError((err) => {
+          console.error("Error sending message: ", err);
+          return EMPTY;
         })
-      );
+      ).subscribe();
     }
   }
 

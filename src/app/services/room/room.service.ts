@@ -5,7 +5,7 @@ import type {
   CreateRoomRequest,
   GetRooms,
   PublicRoom,
-  RoomDetails as Room,
+  Room,
   RoomDetails,
   UpdateRoomRequest
 } from "../../models/rooms.models";
@@ -17,13 +17,16 @@ export class RoomService {
   private readonly roomsApiUrl = "/api/rooms";
   private http = inject(HttpClient);
 
-  selectedRoom = new BehaviorSubject<RoomDetails | null>(null);
-  roomCreated = new Subject<Room>();
+  selectedRoom = new BehaviorSubject<Room | null>(null);
+  
+  newRoom = new Subject<Room>();
+  roomUpdated = new Subject<Room>();
+  removeRoom = new Subject<string>();
 
   getRooms(search: string): Observable<GetRooms<PublicRoom>> {
     return this.http
       .get<GetRooms<PublicRoom>>(this.roomsApiUrl, {
-        params: { search },
+        ...(search && { params: { search } }),
       })
       .pipe(
         shareReplay(),
@@ -105,6 +108,15 @@ export class RoomService {
     return this.http.post<void>(`${this.roomsApiUrl}/${id}/leave`, {}).pipe(
       catchError((err) => {
         console.error(`Error leaving room with id ${id}:`, err);
+        throw err;
+      })
+    );
+  }
+
+  kickMember(roomId: string, userId: string): Observable<void> {
+    return this.http.post<void>(`${this.roomsApiUrl}/kick/${roomId}/${userId}`, {}).pipe(
+      catchError((err) => {
+        console.error(`Error kicking user with id ${userId} from room with id ${roomId}:`, err);
         throw err;
       })
     );

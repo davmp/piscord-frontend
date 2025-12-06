@@ -15,7 +15,7 @@ import { Drawer } from "primeng/drawer";
 import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { SkeletonModule } from "primeng/skeleton";
 import { TabsModule } from "primeng/tabs";
-import { catchError, finalize, of } from "rxjs";
+import { catchError, EMPTY, finalize, of, tap } from "rxjs";
 import { type RoomDetails } from "../../../models/rooms.models";
 import { ChatService } from "../../../services/chat/chat.service";
 import { DeviceService } from "../../../services/device.service";
@@ -98,17 +98,18 @@ export class RoomInfoModalComponent {
     this.setEditRoom?.emit(true);
   }
 
-  handleRemoveMember(memberId: string) {
+  handleKickMember(memberId: string) {
     const room = this.room();
 
     if (room && room.members.some((m) => m.userId === memberId)) {
       this.roomService
-        .updateRoom(room.id, {
-          removeMembers: [memberId],
-        })
+        .kickMember(room.id, memberId)
         .subscribe({
-          next: (room) => {
+          next: () => {
             this.roomService.selectedRoom.next(room);
+          },
+          error: (err) => {
+            console.error("Error kicking member: ", err);
           },
         });
     }
@@ -118,14 +119,17 @@ export class RoomInfoModalComponent {
     const room = this.room();
 
     if (room) {
-      this.roomService.leaveRoom(room.id).subscribe(() => {
-        this.chatService.leaveRoom();
-        if (this.deviceService.isBrowser) {
+      this.roomService.leaveRoom(room.id).pipe(
+        tap(() => {
+          this.chatService.leaveRoom().subscribe();
+          this.roomService.removeRoom.next(room.id);
           this.router.navigate([]);
-        }
-        this.visible.set(false);
-        this.setEditRoom?.emit(false);
-      });
+        }),
+        catchError((err) => {
+          console.error("Error leaving room: ", err);
+          return EMPTY;
+        }),
+      ).subscribe();
     }
   }
 

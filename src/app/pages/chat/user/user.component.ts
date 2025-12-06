@@ -97,7 +97,7 @@ export class ChatUserComponent {
 
     if (user && (this.newMessageContent().trim() || fileUrl)) {
       const requestData: CreateRoomRequest = {
-        type: "direct",
+        type: "DIRECT",
         maxMembers: 2,
         members: [user.id],
         admins: []
@@ -105,19 +105,18 @@ export class ChatUserComponent {
 
       this.chatService.createRoom(requestData).subscribe({
         next: (room) => {
-          const err = this.chatService.selectRoom(room);
-
-          if (err) {
-            console.error("Error entering new room: ", err);
-          } else {
-            const message: SendMessage = {
-              content,
-              fileUrl,
-              replyTo: null
-            }
-            this.chatService.sendMessage(message);
-            this.router.navigate(["chat", room.id]);
-          }
+          this.chatService.selectRoom(room).subscribe({
+            next: () => {
+              const message: SendMessage = {
+                content,
+                fileUrl,
+                replyTo: null
+              }
+              this.chatService.sendMessage(message).subscribe();
+              this.router.navigate(["chat", room.id]);
+            },
+            error: (err) => console.error("Error entering new room: ", err)
+          });
         },
         error: (err) => {
           console.error("Error sending message: ", err);

@@ -6,14 +6,13 @@ import {
   shareReplay,
   Subject,
   tap,
-  throwError,
+  throwError
 } from "rxjs";
 import type { SendMessage, WSMessage } from "../../models/message.models";
 import type {
   CreateRoomRequest,
   Room,
-  RoomDetails,
-  UpdateRoomRequest,
+  UpdateRoomRequest
 } from "../../models/rooms.models";
 import { RoomService } from "../room/room.service";
 import { AuthService } from "../user/auth/auth.service";
@@ -51,63 +50,89 @@ export class ChatService {
     return this.roomsChanged$;
   }
 
-  sendMessage(message: SendMessage) {
+  sendMessage(message: SendMessage): Observable<void> {
     const roomId = this.currentRoom()?.id;
 
     if (!roomId || !this.wsService.connected) {
-      return "Not connected";
+      return throwError(() => new Error("Not connected"));
     }
 
     if (message.content.trim().length > 0 || message.fileUrl) {
       const author = this.authService.auth.value;
 
       if (!author || !author.id) {
-        return "Unauthorized"
+        return throwError(() => new Error("Unauthorized"));
       }
-      
-      this.wsService.sendMessage(
-        {
-          type: "message.send",
-          payload: {
-              ...message,
-              author,
-              roomId,
-              sentAt: Date.now().toLocaleString()
-          },
-        } as WSMessage
-      );
-      return null;
+
+      this.wsService.sendMessage({
+        type: "message.send",
+        payload: {
+          ...message,
+          author,
+          roomId,
+          sentAt: Date.now().toLocaleString(),
+        },
+      } as WSMessage);
+      return new Observable((observer) => {
+        observer.next();
+        observer.complete();
+      });
     }
-    return "Too small";
+    return throwError(() => new Error("Too small"));
   }
 
-  editMessage(messageId: string, content: string) {
+  editMessage(messageId: string, content: string): Observable<void> {
     const roomId = this.currentRoom()?.id;
 
     if (!roomId || !this.wsService.connected) {
-      return "Not connected";
+      return throwError(() => new Error("Not connected"));
     }
 
-    if (content.trim().length > 0) {
-      const message: WSMessage = {
-        type: "message",
+    if (!content.trim().length) {
+      return throwError(() => new Error("Too small"));
+    }
+
+    const message: WSMessage = {
+        type: "message.edit",
         payload: {
-          action: "message:edit",
           roomId: roomId,
           messageId: messageId,
           content,
         },
       };
 
-      this.wsService.sendMessage(message);
-      return null;
-    }
-    return "Too small";
+    this.wsService.sendMessage(message);
+    return new Observable((observer) => {
+      observer.next();
+      observer.complete();
+    });
   }
 
-  selectRoom(room: RoomDetails) {
+  deleteMessage(messageId: string): Observable<void> {
+    const roomId = this.currentRoom()?.id;
+
+    if (!roomId || !this.wsService.connected) {
+      return throwError(() => new Error("Not connected"));
+    }
+
+    const message: WSMessage = {
+      type: "message.delete",
+      payload: {
+        id: messageId,
+        userId: this.authService.auth.value?.id,
+      },
+    };
+
+    this.wsService.sendMessage(message);
+    return new Observable((observer) => {
+      observer.next();
+      observer.complete();
+    });
+  }
+
+  selectRoom(room: Room): Observable<void> {
     if (!this.wsService.connected) {
-      return "Not connected";
+      return throwError(() => new Error("Not connected"));
     }
 
     this.roomService.selectedRoom.next(room);
@@ -119,22 +144,28 @@ export class ChatService {
         payload: { roomId: room.id },
       });
     }
-    return null;
+    return new Observable((observer) => {
+      observer.next();
+      observer.complete();
+    });
   }
 
   selectRoomId(roomId: string) {
-    this.roomService.getRoom(roomId).subscribe((room) => {
-      if (!room) return;
+    return this.roomService.getRoom(roomId).pipe(
+      tap((room) => {
+        this.roomService.selectedRoom.next(room);
+        this.typingUsers = [];
 
-      this.roomService.selectedRoom.next(room);
-      this.typingUsers = [];
-
-      this.wsService.sendMessage({
-        type: "room.enter",
-        payload: { roomId: roomId },
-      });
-    });
-    return null;
+        this.wsService.sendMessage({
+          type: "room.enter",
+          payload: { roomId: room.id },
+        });
+      }),
+      catchError((err) => {
+        console.error("Error selecting room:", err);
+        return throwError(() => "Error selecting room");
+      })
+    );
   }
 
   selectedDirectRoomId(userId: string) {
@@ -158,7 +189,7 @@ export class ChatService {
       tap((data) => {
         if (data) {
           this.rooms$.next();
-          this.selectRoom(data);
+          this.selectRoom(data).subscribe();
         } else {
           console.error("Error creating room:", data);
         }
@@ -185,73 +216,67 @@ export class ChatService {
     );
   }
 
-  joinRoom(newRoomId: string): Observable<Room> | null {
+  joinRoom(room: Room): Observable<void> {
     if (!this.wsService.connected) {
       console.warn("Websocket not connected");
-      return null;
+      return throwError(() => new Error("Not connected"));
     }
 
-    return this.roomService.getRoom(newRoomId).pipe(
-      tap((room) => {
-        if (!room) return;
+    this.wsService.sendMessage({
+      type: "room.join",
+      payload: { roomId: room.id },
+    });
 
-        this.roomService.joinRoom(room.id).subscribe({
-          next: () => {
-            this.reloadRooms();
+    return this.roomService.joinRoom(room.id).pipe(
+          tap(() => {
+            this.roomService.newRoom.next(room);
             this.roomService.selectedRoom.next(room);
             this.typingUsers = [];
-
-            this.wsService.sendMessage(
-              JSON.stringify({
-                type: "room.join",
-                payload: { roomId: newRoomId },
-              })
-            );
-          },
-        });
-      })
-    );
+          })
+        );
   }
 
-  leaveRoom() {
+  leaveRoom(): Observable<void> {
     const roomId = this.currentRoom()?.id;
 
     if (!roomId || !this.wsService.connected) {
-      return "Not connected";
+      return throwError(() => new Error("Not connected"));
     }
 
-    this.wsService.sendMessage(
-      JSON.stringify({
-        type: "room.leave",
-        payload: { roomId: roomId },
-      })
-    );
+    this.wsService.sendMessage({
+      type: "room.leave",
+      payload: { roomId: roomId },
+    });
 
     this.rooms$.next();
     this.typingUsers = [];
 
     this.roomService.selectedRoom.next(null);
-    return null;
+    return new Observable((observer) => {
+      observer.next();
+      observer.complete();
+    });
   }
 
-  exitRoom() {
+  exitRoom(): Observable<void> {
     const roomId = this.currentRoom()?.id;
 
     if (!roomId || !this.wsService.connected) {
-      return "Not connected";
+      return throwError(() => new Error("Not connected"));
     }
 
-    this.wsService.sendMessage(
-      JSON.stringify({
-        type: "room.exit",
-        payload: { roomId: roomId },
-      })
-    );
+    this.wsService.sendMessage({
+      type: "room.exit",
+      payload: { roomId: roomId },
+    });
 
     this.typingUsers = [];
     this.roomService.selectedRoom.next(null);
 
-    return null;
+    return new Observable((observer) => {
+      observer.next();
+      observer.complete();
+    });
   }
 
   reloadRooms() {

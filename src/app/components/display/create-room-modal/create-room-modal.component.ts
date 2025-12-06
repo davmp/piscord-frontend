@@ -9,11 +9,13 @@ import { Router } from "@angular/router";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
 import { InputTextModule } from "primeng/inputtext";
+import { StyleClassModule } from 'primeng/styleclass';
 import { TextareaModule } from "primeng/textarea";
 import type { CreateRoomRequest } from "../../../models/rooms.models";
 import { ChatService } from "../../../services/chat/chat.service";
 import * as themes from "../../../themes/form.themes";
 
+import { InputNumberModule } from "primeng/inputnumber";
 import { catchError, EMPTY, finalize } from "rxjs";
 import { RoomService } from "../../../services/room/room.service";
 
@@ -22,9 +24,11 @@ import { RoomService } from "../../../services/room/room.service";
   imports: [
     DialogModule,
     InputTextModule,
+    InputNumberModule,
     TextareaModule,
     ButtonModule,
     ReactiveFormsModule,
+    StyleClassModule,
   ],
   templateUrl: "./create-room-modal.component.html",
 })
@@ -46,12 +50,9 @@ export class CreateRoomModalComponent {
   constructor() {
     this.form = this.formBuilder.group({
       name: ["", Validators.required],
-      info: [""],
-      public: [true, Validators.required],
+      description: [""],
       picture: [null],
-      maxMembers: [20, [Validators.min(0), Validators.max(200)]],
-      members: [[]],
-      admins: [[]],
+      maxMembers: [20, [Validators.min(2), Validators.max(100)]],
     });
   }
 
@@ -65,25 +66,14 @@ export class CreateRoomModalComponent {
     if (val.name) {
       this.isLoading.set(true);
 
-      const members = val.members.filter((member: string) => member !== "");
-      const admins = val.admins.filter((admin: string) => admin !== "");
-
-      if (members.length >= val.maxMembers) {
-        this.isLoading.set(false);
-        this.form.get("maxMembers")?.setErrors({
-          maxMembers: true,
-        });
-        return;
-      }
-
       const createRoomRequest: CreateRoomRequest = {
         name: val.name,
-        description: val.info,
-        type: val.public ? "public" : "private",
+        description: val.description,
+        type: "PUBLIC", // TODO: implement private rooms
         picture: val.picture,
-        maxMembers: val.maxMembers > 0 ? val.maxMembers : undefined,
-        members: members,
-        admins: admins,
+        maxMembers: val.maxMembers,
+        members: [],
+        admins: [],
       };
 
       this.chatService
@@ -96,7 +86,7 @@ export class CreateRoomModalComponent {
           })
         )
         .subscribe((room) => {
-          this.roomService.roomCreated.next(room);
+          this.roomService.newRoom.next(room);
           this.roomService.selectedRoom.next(room);
           this.router.navigateByUrl(`/rooms/${room.id}`);
           this.handleSetVisible(false);

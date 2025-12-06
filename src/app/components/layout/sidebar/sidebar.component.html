@@ -80,7 +80,7 @@
               {{ room.displayName }}
             </span>
             @if (room.lastMessage) {<span
-              class="min-w-fit text-[10px] text-neutral-500"
+              class="min-w-fit text-[10px] text-stone-500"
               >{{ formattedDate(room.lastMessage.createdAt) }}</span
             >}
           </div>
@@ -94,7 +94,7 @@
           }
         </div>
 
-        @if (room.type !== 'direct') {
+        @if (room.type !== 'DIRECT') {
         <button
           class="hidden group-hover/room:grid place-content-center hover:text-stone-200 text-stone-500"
           (click)="onLeaveRoom(room)"
